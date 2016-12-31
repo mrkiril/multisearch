@@ -188,8 +188,11 @@ class SearchEngine:
             res = client.get(self.url + "+".join(query) + "&",
                              params=payload
                              )
-
-            data = res.body
+            if res is not None:
+                data = res.body
+            if res is None:
+                continue
+            
             if self.list_start[-1] == ">":
                 # видідили список результатів
                 m_pattern = re.search(

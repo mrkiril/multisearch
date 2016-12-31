@@ -33,6 +33,7 @@ class MyServer(BaseServer):
     
     def styles(self, request):
         path = os.path.join(os.getcwd(), request.path[1:] )
+        print(path)
         try:
             with open(path, "r") as fp:
                 data = fp.read()
@@ -42,6 +43,8 @@ class MyServer(BaseServer):
         else:
             if b"bootstrap.js" in request.text:
                 return HttpResponse(data, content_type='application/javascript')
+            elif b"favicon.ico" in request.text:
+                return HttpResponse(data, content_type='image/x-icon')            
             else:
                 return HttpResponse(data, content_type='text/css')
     

@@ -6,10 +6,10 @@
 #   pip install -r requirements.txt
 
 # server
--e git+https://github.com/mrkiril/http_server#egg=server
+-e git+https://github.com/mrkiril/httpserver#egg=httpserver
 
 # http_lib
--e git+https://github.com/mrkiril/http_client#egg=http_client
+-e git+https://github.com/mrkiril/httpclient#egg=httpclient
 
 
 #requests==2.9.1
