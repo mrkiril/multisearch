@@ -18,7 +18,7 @@ import logging
 #sys.path.insert(0, "F:\Python\http")
 from urllib.parse import quote
 from urllib.parse import unquote
-from http_lib.httpclient_pep8 import HttpClient
+from httpclient import HttpClient
 
 
 my_headers = [

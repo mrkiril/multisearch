@@ -14,7 +14,7 @@ import math
 import hashlib
 #sys.path.append(os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)), os.pardir)))
 #import requests
-from http_client import HttpClient
+from httpclient import HttpClient
 
 
 class Test_serv(unittest.TestCase):

@@ -7,7 +7,7 @@ from subprocess import Popen, PIPE, STDOUT, call
 from search_resp import main_import
 file_path = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(file_path)
-from http_server import BaseServer, HttpResponse
+from httpserver import BaseServer, HttpResponse
 
 class MyServer(BaseServer):
     def main_page(self, request):
