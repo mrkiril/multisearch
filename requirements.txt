@@ -1,0 +1,16 @@
+# This file allows you to install lib extensions related to search server
+# and the dependencies for it. 
+#
+# Use it like this:
+#
+#   pip install -r requirements.txt
+
+# server
+-e git+https://github.com/mrkiril/http_server#egg=server
+
+# http_lib
+-e git+https://github.com/mrkiril/http_client#egg=http_client
+
+
+#requests==2.9.1
+
