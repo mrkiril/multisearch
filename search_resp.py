@@ -19,7 +19,9 @@ import logging
 from urllib.parse import quote
 from urllib.parse import unquote
 from httpclient import HttpClient
-
+import multiprocessing
+#from multiprocessing import Queue
+from itertools import repeat
 
 my_headers = [
     ('User-Agent', 'Opera/9.80 (iPhone; Opera Mini/7.0.4/28.2555; U; fr) Presto/2.8.119 Version/11.10'), ('X-From', 'UA')]
@@ -171,7 +173,7 @@ class SearchEngine:
 
         return list_
 
-    def search(self, query, max_count):
+    def search(self, query, max_count):        
         payload = self.val
         #cookies = self.Cookie
         results = []  # масив лінків, описів і цитат
@@ -248,7 +250,7 @@ class SearchEngine:
 
                 results.append([m_link_link, m_link_header,
                                 m_citat_citat, elem_index_of])
-
+                     
         return results
 
 
@@ -259,11 +261,23 @@ class ResultsMerger:
 
     def search(self, query, output, max_count):
         all_ = []
-        for elem in self.arr_engines:
+        #for elem in self.arr_engines:
             # запуск функції пошуку для кожного екземпляра класа
             # SearchEngine.
-            all_.extend(elem.search(query, max_count))
-
+        #    stack = elem.search(query, max_count)            
+        #    all_.extend(stack)
+        
+        with multiprocessing.Pool( 20) as pool: 
+            m = multiprocessing.Manager()
+            q = m.Queue()           
+            queue = pool.starmap(SearchEngine.search, zip(self.arr_engines, repeat(query), repeat(max_count) ))
+        
+        for qeu in queue:
+            all_.extend(qeu)
+        
+        logger.info("Count Q: "+ str(len(all_)))
+        pool.close()  # no more tasks
+        pool.join()  # wrap up current tasks
         for i in range(len(all_)):
             iteration = i + 1
             stop = False
@@ -329,8 +343,9 @@ class ResultsMerger:
         return page
 
 
-def main_console():
-    logger = logging.getLogger(__name__)
+
+def main_console(): 
+    logger = logging.getLogger(__name__)   
     engines = []
     for key, value in SETTINGS.items():
         engines.append(SearchEngine(SETTINGS[key]))
@@ -346,6 +361,7 @@ def main_console():
 
 
 def main_import(request, number):
+    global logger 
     logger = logging.getLogger(__name__)    
     engines = []
     for key, value in SETTINGS.items():

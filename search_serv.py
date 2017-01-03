@@ -33,7 +33,7 @@ class MyServer(BaseServer):
     
     def styles(self, request):
         path = os.path.join(os.getcwd(), request.path[1:] )
-        print(path)
+        #print(path)
         try:
             with open(path, "r") as fp:
                 data = fp.read()
