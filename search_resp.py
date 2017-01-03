@@ -173,7 +173,7 @@ class SearchEngine:
 
         return list_
 
-    def search(self, query, max_count):        
+    def search(self, query, max_count):         
         payload = self.val
         #cookies = self.Cookie
         results = []  # масив лінків, описів і цитат
