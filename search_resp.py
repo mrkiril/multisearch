@@ -64,7 +64,7 @@ SETTINGS = {
     },
     
     'mail': {
-        'url': 'http://go.mail.ru/search',
+        'url': 'http://go.mail.ru/msearch',
         'list_start': '<ol class="result">',
         'list_end': '</ol><!-- FOUND: END -->',
         'element': '<li id="js-result_',
@@ -313,7 +313,7 @@ class ResultsMerger:
                 print( arr_status)
                 print("TIME >>> ", time.time() - global_start_time )
                 print("\r\n"*3)
-                if time.time() - global_start_time > 2:
+                if time.time() - global_start_time > 1:
                     count = arr_status.count(True)
                     if count/len(arr_status) > 0.6:
                         self.logger.info("")
