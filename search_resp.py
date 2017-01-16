@@ -313,10 +313,10 @@ class ResultsMerger:
                 print( arr_status)
                 print("TIME >>> ", time.time() - global_start_time )
                 print("\r\n"*3)
-                if time.time() - global_start_time > 1:
+                if time.time() - global_start_time > 3.5:
                     count = arr_status.count(True)
                     if count/len(arr_status) > 0.6:
-                        self.logger.info("")
+                        #self.logger.info("")
                         print( count)
                         print( len(arr_status) )
                         print( count/len(arr_status) )
