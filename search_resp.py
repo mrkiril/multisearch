@@ -325,7 +325,7 @@ class ResultsMerger:
 
         #for ob in arr_obj:
         #    print( len(ob.body))
-        self.logger.info( "all time"+str(time.time() - global_start_time) )
+        logger.info( "all time"+str(time.time() - global_start_time) )
         
         # parse res obj and take page data
         for ob in arr_obj:
