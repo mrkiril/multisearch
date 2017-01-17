@@ -26,14 +26,17 @@ class MyServer(BaseServer):
         for s in sp:
             tmp = s.split("=")
             req[tmp[0]] = tmp[1]
-        req_req = req["q"].split("+")        
+                
+        if req["q"]=="":            
+            return self.main_page(request)
         
+        req_req = req["q"].split("+")
         output= main_import(request=req_req, number="20")
         return HttpResponse(output, content_type='text/html')
     
     def styles(self, request):
         path = os.path.join(os.getcwd(), request.path[1:] )
-        #print(path)
+        #print(os.getpid())
         try:
             with open(path, "r") as fp:
                 data = fp.read()

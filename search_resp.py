@@ -308,35 +308,24 @@ class ResultsMerger:
         while True:
             arr_status = [ob.isready() for ob in arr_obj]        
             if False in arr_status:
-                sleep(0.01)
-                logging.info("sleep 0.01")
-                print( arr_status)
-                print("TIME >>> ", time.time() - global_start_time )
-                print("\r\n"*3)
-                if time.time() - global_start_time > 3.5:
+                sleep(0.05)
+                logging.info("sleep 0.05")
+                #print( arr_status)
+                #print("TIME >>> ", time.time() - global_start_time )
+                #print("\r\n"*3)
+                if time.time() - global_start_time > 0.9:
                     count = arr_status.count(True)
                     if count/len(arr_status) > 0.6:
-                        #self.logger.info("")
-                        print( count)
-                        print( len(arr_status) )
-                        print( count/len(arr_status) )
-                        #_=input("Br point")
-                        continue
-                    else:
-                        print("\r\n"*5)
-                        print("ALOHA MINI")
-                        print("\r\n"*5)
                         break
+                    else:                        
+                        continue
                 continue
-            else:
-                print("\r\n"*5)
-                print("ALOHA GloBAL")
-                print("\r\n"*5)
+            else:                
                 break
 
-        for ob in arr_obj:
-            print( len(ob.body))
-        print( time.time() - global_start_time)
+        #for ob in arr_obj:
+        #    print( len(ob.body))
+        self.logger.info( "all time"+str(time.time() - global_start_time) )
         
         # parse res obj and take page data
         for ob in arr_obj:
