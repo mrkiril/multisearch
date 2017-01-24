@@ -48,7 +48,7 @@ client = HttpClient(
 
 
 SETTINGS = {
-    
+
     'google': {
         'url': 'http://www.google.com.ua/search',
         'list_start': '<div id="ires"><ol>',
@@ -58,11 +58,11 @@ SETTINGS = {
         'citat': '<span class="st">',
         'iterator': '10',
         'start_number': '0',
-        'sign':"q",
+        'sign': "q",
         'key': 'start',  # повинен бути 0 , 10 ,20, 30
         "val": {"btnG": "%D0%9F%D0%BE%D0%B8%D1%81%D0%BA"}
     },
-    
+
     'mail': {
         'url': 'http://go.mail.ru/msearch',
         'list_start': '<ol class="result">',
@@ -72,11 +72,11 @@ SETTINGS = {
         'citat': '<span class="result__snp">',
         'iterator': '10',
         'start_number': '0',
-        'sign':"q",
+        'sign': "q",
         'key': 'sf',  # повинен бути 0, 1 ,2,3,4,5
         "val": {"fm": "1", "frm": "jsok"}
     },
-    
+
     'sputnik': {
         'url': 'http://www.sputnik.ru/search',
         'list_start': '<div class="b-results js-results">',
@@ -87,11 +87,11 @@ SETTINGS = {
         'citat': '<div class="b-result-tex',
         'iterator': '10',
         'start_number': '1',
-        'sign':"q",
+        'sign': "q",
         'key': 'from',  # повинен бути 1, 11 ,21,31,41,51
         "val": {}
     },
-    
+
     'yahoo': {
         'url': 'http://search.yahoo.com/search',
         'list_start': '</style><section class="reg searchCenterMiddle">',
@@ -101,11 +101,11 @@ SETTINGS = {
         'link': '<div class="compTitle options-toggle">',
         'iterator': '10',
         'start_number': '1',
-        'sign':"p",
+        'sign': "p",
         'key': 'b',  # повинен бути 1 , 11 ,21, 31
         "val": {"pz": "10", "bct": "0", "ei": "UTF-8", "gbv": "1"}
     },
-    
+
     'bing': {
         'url': 'http://www.bing.com/search',
         'list_start': '<ol id="b_results"',
@@ -115,29 +115,12 @@ SETTINGS = {
         'citat': '<div class="b_caption">',
         'iterator': '10',
         'start_number': '1',
-        'sign':"q",
+        'sign': "q",
         'key': 'first',  # повинен бути 1 , 11 ,21, 31
         "val": {"go": "%d0%9f%d0%be%d0%b8%d1%81%d0%ba", "qs": "ds"}
     }
 }
 
-'''
-SETTINGS = {
-'mail': {
-        'url': 'http://go.mail.ru/msearch',
-        'list_start': '<ol class="result">',
-        'list_end': '</ol><!-- FOUND: END -->',
-        'element': '<li id="js-result_',
-        'link': '<span class="result__title',
-        'citat': '<span class="result__snp">',
-        'iterator': '10',
-        'start_number': '0',
-        'sign':"q",
-        'key': 'sf',  # повинен бути 0, 1 ,2,3,4,5
-        "val": {"fm": "1", "frm": "jsok"}
-    }
-}
-'''
 
 class SearchEngine:
 
@@ -205,25 +188,26 @@ class SearchEngine:
         return list_
 
     def query_to(self, query, max_count):
-        payload = self.val        
+        payload = self.val
         arr = []  # масив лінків, описів і цитат
-        for index in range((int(max_count) // 10) ):
-            payload[self.key] = str( int(self.start_number) + index * int(self.iterator))
+        for index in range((int(max_count) // 10)):
+            payload[self.key] = str(
+                int(self.start_number) + index * int(self.iterator))
             payload[self.sign] = str("+".join(query))
             res = client.get(self.url,
                              params=payload,
                              nonblocking=True,
-                             output=os.path.join(os.getcwd(),"socket_page.html"))
+                             output=os.path.join(os.getcwd(), "socket_page.html"))
             arr.append(res)
         return arr
-    
+
     def parser(self, res):
         results = []  # масив лінків, описів і цитат
-        page_elements_numbers = 0        
+        page_elements_numbers = 0
         # Повторення запитів на пошукову систему
         if res.issend == True:
             data = res.body
-                        
+
             if self.list_start[-1] == ">":
                 # видідили список результатів
                 m_pattern = re.search(
@@ -233,7 +217,7 @@ class SearchEngine:
                 # видідили список результатів
                 m_pattern = re.search(
                     self.list_start + ".*?>" + ".*?" + self.list_end, data, re.DOTALL)
-            
+
             if True:
                 if m_pattern is not None:
                     m_block = self.block_finder(m_pattern.group())
@@ -279,61 +263,58 @@ class SearchEngine:
 
                 results.append([m_link_link, m_link_header,
                                 m_citat_citat, elem_index_of])
-                     
-        return results    
+
+        return results
+
 
 class ResultsMerger:
 
     def __init__(self, engines):
         self.arr_engines = engines
 
-    def getinstance(self, dick, elem):        
-        for k, v in dick.items():            
+    def getinstance(self, dick, elem):
+        for k, v in dick.items():
             if elem in v:
                 return k
-    
+
     def search(self, query, output, max_count):
         global_start_time = time.time()
         all_ = []
-        arr_obj = []        
+        arr_obj = []
         obj_res_dick = {}
         # create stack instance of the class
-        for elem in self.arr_engines:            
-            stack = elem.query_to(query, max_count)            
-            arr_obj.extend(stack)            
+        for elem in self.arr_engines:
+            stack = elem.query_to(query, max_count)
+            arr_obj.extend(stack)
             obj_res_dick[elem] = stack
-        
+
         recv_time = time.time()
         # Take message body
         while True:
-            arr_status = [ob.isready() for ob in arr_obj]        
+            arr_status = [ob.isready() for ob in arr_obj]
             if False in arr_status:
                 sleep(0.05)
-                logging.info("sleep 0.05")
-                #print( arr_status)
-                #print("TIME >>> ", time.time() - global_start_time )
-                #print("\r\n"*3)
+                if time.time() - global_start_time > 1.5:
+                    break                
                 if time.time() - global_start_time > 0.9:
                     count = arr_status.count(True)
-                    if count/len(arr_status) > 0.6:
+                    if count / len(arr_status) > 0.6:
                         break
-                    else:                        
+                    else:
                         continue
                 continue
-            else:                
+            else:
                 break
 
-        #for ob in arr_obj:
-        #    print( len(ob.body))
-        logger.info( "all time"+str(time.time() - global_start_time) )
-        
+        logger.info("all time: " + str(time.time() - global_start_time))
+
         # parse res obj and take page data
         for ob in arr_obj:
-            val = SearchEngine.parser(self.getinstance(obj_res_dick, ob) , ob)
+            val = SearchEngine.parser(self.getinstance(obj_res_dick, ob), ob)
             if val is not None:
                 all_.extend(val)
-        
-        logger.info("Count Q: "+ str(len(all_)))
+
+        logger.info("Count Q: " + str(len(all_)))
         for i in range(len(all_)):
             iteration = i + 1
             stop = False
@@ -392,16 +373,14 @@ class ResultsMerger:
                 fp.write("<p>" + str(al[2]) + "</p>")
                 fp.write("</div>")
                 fp.write("<br><br>")
-                #-------------------------------
                 Number_of_page_elem += 1
         with open(output) as fp:
             page = fp.read()
         return page
 
 
-
-def main_console(): 
-    logger = logging.getLogger(__name__)   
+def main_console():
+    logger = logging.getLogger(__name__)
     engines = []
     for key, value in SETTINGS.items():
         engines.append(SearchEngine(SETTINGS[key]))
@@ -410,17 +389,19 @@ def main_console():
     merger = ResultsMerger(engines)
     max_count = sys.argv[1]
     query = sys.argv[2:]
-    
+
     output = os.path.join(os.getcwd(), 'output.html')
     page = merger.search(query, output, max_count)
     sys.stdout.write(page)
 
 
-def main_import(request, number):
-    global logger 
-    logger = logging.getLogger(__name__)    
+def main_import(request, number, search_sys_dict):
+    global logger
+    logger = logging.getLogger(__name__)
     engines = []
-    for key, value in SETTINGS.items():
+    rewrite_setting = {k: SETTINGS[k] for k, v in search_sys_dict.items() if v == "on"}
+    
+    for key, value in rewrite_setting.items():
         engines.append(SearchEngine(SETTINGS[key]))
         logger.info(key)
 
@@ -429,7 +410,7 @@ def main_import(request, number):
     max_count = number
 
     output = os.path.join(os.getcwd(), 'output.html')
-    page = merger.search(query, output, max_count)    
+    page = merger.search(query, output, max_count)
     return page
 
 if __name__ == '__main__':
