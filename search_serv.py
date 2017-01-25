@@ -43,7 +43,8 @@ class MyServer(BaseServer):
             return self.main_page(request)
 
         req_req = req["q"].split("+")
-        output = main_import(request=req_req, number="20", search_sys_dict=self.dict_search_sys)
+        output = main_import(request=req_req, number="20",
+                             search_sys_dict=self.dict_search_sys)
         return HttpResponse(output, content_type='text/html')
 
     def styles(self, request):
@@ -67,7 +68,7 @@ class MyServer(BaseServer):
         self.add_route(r'^/$', self.main_page)
         self.add_route(r'^/search$', self.meta_search)
         self.add_route(r'^/form/.*$', self.styles)
-        #self.add_route(r'^/(.*)$', self.notfound)
+        # self.add_route(r'^/(.*)$', self.notfound)
 
     def rewrite_setting_file(self, file, conf):
         newline = re.sub("http://[^/]+/search", "http://" +
@@ -85,7 +86,7 @@ class MyServer(BaseServer):
             conf = config['searchsystem']
             if len(system) == len(set(system) & set(list(conf))):
                 return {el: conf[el] for el in system}
-            
+
             else:
                 config.remove_section('searchsystem')
                 config['searchsystem'] = {el: "on" for el in system}
@@ -102,10 +103,11 @@ class MyServer(BaseServer):
     def setting_connect(self):
         config = configparser.ConfigParser()
         config.read(self.setting_file_path)
+        page_path = os.path.join(self.file_path, "forms.html")
         if "DEFAULT" in config:
             conf = config['DEFAULT']
             if 'ip' in conf and 'port' in conf:
-                with open(os.path.join(self.file_path, "forms.html"), "r") as fp:
+                with open(page_path, "r") as fp:
                     file = fp.read()
 
                 what = re.findall("http://([^/]+)/search", file)
@@ -126,7 +128,7 @@ class MyServer(BaseServer):
                 with open(self.setting_file_path, 'w') as configfile:
                     config.write(configfile)
 
-                with open(os.path.join(self.file_path, "forms.html"), "r") as fp:
+                with open(page_path, "r") as fp:
                     file = fp.read()
                 newline = self.rewrite_setting_file(file, conf)
 

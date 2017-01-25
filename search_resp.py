@@ -26,7 +26,9 @@ import multiprocessing
 from itertools import repeat
 
 my_headers = [
-    ('User-Agent', 'Opera/9.80 (iPhone; Opera Mini/7.0.4/28.2555; U; fr) Presto/2.8.119 Version/11.10'), ('X-From', 'UA')]
+    ('User-Agent', "Opera/9.80 (iPhone; Opera Mini/7.0.4/28.2555; U; fr)"
+        " Presto/2.8.119 Version/11.10"),
+    ('X-From', 'UA')]
 my_user_pass = ('kiril', 'supersecret')
 file_path = os.path.abspath(os.path.dirname(__file__))
 
@@ -197,7 +199,8 @@ class SearchEngine:
             res = client.get(self.url,
                              params=payload,
                              nonblocking=True,
-                             output=os.path.join(os.getcwd(), "socket_page.html"))
+                             output=os.path.join(os.getcwd(),
+                                                 "socket_page.html"))
             arr.append(res)
         return arr
 
@@ -216,7 +219,8 @@ class SearchEngine:
             if self.list_start[-1] != ">":
                 # видідили список результатів
                 m_pattern = re.search(
-                    self.list_start + ".*?>" + ".*?" + self.list_end, data, re.DOTALL)
+                    self.list_start + ".*?>" + ".*?" +
+                    self.list_end, data, re.DOTALL)
 
             if True:
                 if m_pattern is not None:
@@ -295,7 +299,7 @@ class ResultsMerger:
             if False in arr_status:
                 sleep(0.05)
                 if time.time() - global_start_time > 3.5:
-                    break                
+                    break
                 if time.time() - global_start_time > 0.9:
                     count = arr_status.count(True)
                     if count / len(arr_status) > 0.6:
@@ -365,7 +369,9 @@ class ResultsMerger:
                 # INDEX
                 fp.write('''<div class="g">''')
                 fp.write("<p>№ " + str(Number_of_page_elem) +
-                         '''\t<span class="marg">Index:''' + str(al[3]) + "</span></p>" )
+                         '''\t<span class="marg">Index:''' +
+                         str(al[3]) +
+                         "</span></p>")
                 # Link
                 fp.write("<h3><a href=" +
                          str(al[0]) + ">" + str(al[1]) + "</a></h3>")
@@ -399,8 +405,9 @@ def main_import(request, number, search_sys_dict):
     global logger
     logger = logging.getLogger(__name__)
     engines = []
-    rewrite_setting = {k: SETTINGS[k] for k, v in search_sys_dict.items() if v == "on"}
-    
+    rewrite_setting = {k: SETTINGS[k]
+                       for k, v in search_sys_dict.items() if v == "on"}
+
     for key, value in rewrite_setting.items():
         engines.append(SearchEngine(SETTINGS[key]))
         logger.info(key)
