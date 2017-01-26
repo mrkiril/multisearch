@@ -1,15 +1,16 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import os.path
 import os
 import sys
 import re
 import logging
 import logging.config
-from subprocess import Popen, PIPE, STDOUT, call
 from search_resp import main_import
 from search_resp import SETTINGS
 import configparser
-from httpserver import BaseServer, HttpResponse
-
+from httpserver import BaseServer
+from httpserver import HttpResponse
 
 class MyServer(BaseServer):
 
@@ -67,8 +68,7 @@ class MyServer(BaseServer):
     def configure(self):
         self.add_route(r'^/$', self.main_page)
         self.add_route(r'^/search$', self.meta_search)
-        self.add_route(r'^/form/.*$', self.styles)
-        # self.add_route(r'^/(.*)$', self.notfound)
+        self.add_route(r'^/form/.*$', self.styles)        
 
     def rewrite_setting_file(self, file, conf):
         newline = re.sub("http://[^/]+/search", "http://" +
@@ -124,7 +124,7 @@ class MyServer(BaseServer):
             else:
                 conf = config['DEFAULT']
                 conf["ip"] = '127.0.0.1'
-                conf["port"] = "8181"
+                conf["port"] = "8080"
                 with open(self.setting_file_path, 'w') as configfile:
                     config.write(configfile)
 
@@ -147,4 +147,5 @@ app = MyServer()
 logging.config.fileConfig(os.path.join(os.getcwd(), "setting", "logging.conf"))
 
 app.logger.info("start >> " + str(os.getpid()))
+app.logger.info( str(app.ip)+" : "+str(app.port) )
 app.serve_forever()

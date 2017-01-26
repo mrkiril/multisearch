@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Task: metasearch
@@ -13,17 +13,9 @@ import re
 import sys
 import time
 from time import sleep
-import socket
-import base64
-import hashlib
 import logging
-#sys.path.insert(0, "F:\Python\http")
-from urllib.parse import quote
 from urllib.parse import unquote
 from httpclient import HttpClient
-import multiprocessing
-#from multiprocessing import Queue
-from itertools import repeat
 
 my_headers = [
     ('User-Agent', "Opera/9.80 (iPhone; Opera Mini/7.0.4/28.2555; U; fr)"
@@ -139,11 +131,10 @@ class SearchEngine:
         self.header = None
         if 'header' in settings:
             self.header = settings['header']
-        #- - - - - page changes - - - - -
+        
         self.iterator = settings["iterator"]
         self.start_number = settings["start_number"]
         self.key = settings["key"]
-        #- - - - -
         self.del_pattern = re.compile(
             "</?(b|strong|span|br|p|div|li|i)>|<(span|p|i|div|b|wbr|ul).*?>")
         self.file_path = os.path.abspath(os.path.dirname(__file__))
@@ -208,7 +199,7 @@ class SearchEngine:
         results = []  # масив лінків, описів і цитат
         page_elements_numbers = 0
         # Повторення запитів на пошукову систему
-        if res.issend == True:
+        if res.issend:
             data = res.body
 
             if self.list_start[-1] == ">":
@@ -241,7 +232,7 @@ class SearchEngine:
                 if cheсk_li is not None:
                     cheсk_link = True
 
-                if cheсk_link == False or cheсk_citat == False:
+                if not cheсk_link or not cheсk_citat:
                     return None
 
                 tmp_get = self.get_link(this_elem)
@@ -254,8 +245,7 @@ class SearchEngine:
                 pattern_citat = re.compile(
                     self.citat + ".+?" + back_header, re.DOTALL)
 
-                m_citat = pattern_citat.search(this_elem)
-                #last = re.search('.*$', this_elem)
+                m_citat = pattern_citat.search(this_elem)                
                 if m_citat is not None:
                     citat_str = m_citat.group()
                 else:

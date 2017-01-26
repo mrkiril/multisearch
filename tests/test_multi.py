@@ -1,18 +1,7 @@
-import sys
-import os
-import datetime
-import time
-import re
-import socket
-import base64
-import json
-import mimetypes
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import os.path
-import logging
-import random
-import string
-import math
-import hashlib
+import re
 import socket
 import unittest
 from httpclient import HttpClient
@@ -20,7 +9,7 @@ import subprocess
 import multiprocessing
 from time import sleep
 import signal
-
+import configparser
 
 class Test_serv(unittest.TestCase):
 
@@ -59,6 +48,13 @@ class Test_serv(unittest.TestCase):
         print("slave >> " + str(self.pid))
         print("head  >> " + str(os.getpid()))
         print("child >> " + str(self.children.value))
+        config = configparser.ConfigParser()
+        config.read( os.path.join( self.file_path ,"..","setting", "setting.ini" ) )
+        print( os.path.join( self.file_path ,"..","setting", "setting.ini" ) )
+        self.ip = config['DEFAULT']["ip"]
+        self.port = config['DEFAULT']["port"]
+        self.sock = self.ip+":"+self.port
+        #_=input()
 
     def process(self, child_pid):
         children = subprocess.Popen(["python3", "search_serv.py"], shell=False)
@@ -76,14 +72,14 @@ class Test_serv(unittest.TestCase):
 
     def test_page(self):
         sleep(1)
-        res = self.client.get('http://127.0.0.1:8080/search?q=tarantino')
+        res = self.client.get('http://'+self.sock+'/search?q=tarantino')
         pat1 = re.search("tarantino", res.body)
         # перевірка на успішність запиту
         self.assertEqual(res.status_code, "200")
         # перевірка на наявність слова в видачі
         self.assertIsNotNone(pat1)
 
-        res = self.client.get('http://127.0.0.1:8080/search?q=Рогнар+Лодброк')
+        res = self.client.get('http://'+self.sock+'/search?q=Рогнар+Лодброк')
         pat1 = re.search("Рогнар", res.body)
         pat2 = re.search("Лодброк", res.body)
         # перевірка на успішність запиту
@@ -93,18 +89,18 @@ class Test_serv(unittest.TestCase):
         self.assertIsNotNone(pat2)
 
         res = self.client.get(
-            'http://127.0.0.1:8080/wrong_page.,!@#$%^&*(WTF_page)')
+            'http://'+self.sock+'/wrong_page.,!@#$%^&*(WTF_page)')
         # перевірка на успішність запиту
         self.assertEqual(res.status_code, "404")
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        addr = ("127.0.0.1", 8080)
+        addr = (self.ip, int(self.port))
         sock.connect(addr)
         CRLF = b"\r\n"
         q = b"GETT /search?q=tarantino HTTP/1.1" + CRLF
         q += b"User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)" + \
             CRLF
-        q += b"Host: 127.0.0.1:8080" + CRLF
+        q += b"Host: "+self.sock.encode() + CRLF
         q += b"Connection: Close" + CRLF
         q += CRLF
         sock.send(q)
@@ -113,15 +109,16 @@ class Test_serv(unittest.TestCase):
         status = re.search(b"HTTP.*? (\d+) ", response[:16])
         status_code = status.group(1).decode()
         self.assertEqual(status_code, "400")
+        sock.close()
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        addr = ("127.0.0.1", 8080)
+        addr = (self.ip, int(self.port))
         sock.connect(addr)
         CRLF = b"\r\n"
         q = b"/GET /search?q=tarantino HTTP/1.1" + CRLF
         q += b"User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)" + \
             CRLF
-        q += b"Host: 127.0.0.1:8080" + CRLF
+        q += b"Host: "+self.sock.encode() + CRLF
         q += b"Connection: Close" + CRLF
         q += CRLF
         sock.send(q)
@@ -130,7 +127,7 @@ class Test_serv(unittest.TestCase):
         status = re.search(b"HTTP.*? (\d+) ", response[:16])
         status_code = status.group(1).decode()
         self.assertEqual(status_code, "400")
-
+        sock.close()
 
 if __name__ == '__main__':
     unittest.main()
