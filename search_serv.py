@@ -12,20 +12,29 @@ import configparser
 from httpserver import BaseServer
 from httpserver import HttpResponse
 
-class MyServer(BaseServer):
 
+class MyServer(BaseServer):
+    """ Class of a base class that implements
+        configure method of the list of pages.
+        And methods which this pages returned
+        Attributes:
+            ip: server ip
+            port: server port
+            And logger of library can call'd like self.logger
+    """
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.file_path = os.path.abspath(os.path.dirname(__file__))
         self.setting_file_path = os.path.join(
             self.file_path, "setting", "setting.ini")
         self.dict_search_sys = self.setting_search_sys()
-        ip, port = self.setting_connect()
-        super(MyServer, self).__init__(ip, port)
+        self.ip, self.port = self.setting_connect()
+        super(MyServer, self).__init__(self.ip, self.port)
 
     def main_page(self, request):
         with open("forms.html", "r") as fp:
             data = fp.read()
+        data = self.rewrite_main_file(data)
         return HttpResponse(data, content_type='html')
 
     def notfound(self, request, name):
@@ -68,14 +77,11 @@ class MyServer(BaseServer):
     def configure(self):
         self.add_route(r'^/$', self.main_page)
         self.add_route(r'^/search$', self.meta_search)
-        self.add_route(r'^/form/.*$', self.styles)        
+        self.add_route(r'^/form/.*$', self.styles)
 
-    def rewrite_setting_file(self, file, conf):
+    def rewrite_main_file(self, file):
         newline = re.sub("http://[^/]+/search", "http://" +
-                         conf["ip"] + ":" + conf["port"] + "/search", file)
-        with open(os.path.join(self.file_path, "forms.html"), "w") as fp:
-            file = fp.write(newline)
-        self.logger.info("Setting is broken. Rewrite setting")
+                         str(self.ip) + ":" + str(self.port) + "/search", file)
         return newline
 
     def setting_search_sys(self):
@@ -103,49 +109,30 @@ class MyServer(BaseServer):
     def setting_connect(self):
         config = configparser.ConfigParser()
         config.read(self.setting_file_path)
-        page_path = os.path.join(self.file_path, "forms.html")
         if "DEFAULT" in config:
             conf = config['DEFAULT']
             if 'ip' in conf and 'port' in conf:
-                with open(page_path, "r") as fp:
-                    file = fp.read()
-
-                what = re.findall("http://([^/]+)/search", file)
-                for el in what:
-                    ip, port = el.split(":")
-                    if ip == conf["ip"] and port == conf["port"]:
-                        pass
-                    else:
-                        newline = self.rewrite_setting_file(file, conf)
-                        break
                 self.logger.info("Setting is ok")
                 return(conf["ip"], int(conf["port"]))
 
             else:
-                conf = config['DEFAULT']
-                conf["ip"] = '127.0.0.1'
-                conf["port"] = "8080"
-                with open(self.setting_file_path, 'w') as configfile:
-                    config.write(configfile)
-
-                with open(page_path, "r") as fp:
-                    file = fp.read()
-                newline = self.rewrite_setting_file(file, conf)
-
-            return(conf["ip"], int(conf["port"]))
+                self.logger.info(
+                    "Setting file is broken."
+                    " Start server on default setting 127.0.0.1:8080")
+                return("127.0.0.1", int("8080"))
         else:
-            config['DEFAULT'] = {'ip': '127.0.0.1', 'port': "8080"}
-            with open(self.setting_file_path, 'w') as configfile:
-                config.write(configfile)
+            self.logger.info(
+                "Setting file is broken."
+                " Start server on default setting 127.0.0.1:8080")
+            return("127.0.0.1", int("8080"))
 
-            with open(os.path.join(self.file_path, "forms.html"), "r") as fp:
-                file = fp.read()
-            newline = self.rewrite_setting_file(file, conf)
-            return('127.0.0.1', 8080)
+try:
+    app = MyServer()
+    logging.config.fileConfig(
+        os.path.join(os.getcwd(), "setting", "logging.conf"))
+    app.logger.info("start >> " + str(os.getpid()))
+    app.logger.info(str(app.ip)+" : "+str(app.port))
+    app.serve_forever()
 
-app = MyServer()
-logging.config.fileConfig(os.path.join(os.getcwd(), "setting", "logging.conf"))
-
-app.logger.info("start >> " + str(os.getpid()))
-app.logger.info( str(app.ip)+" : "+str(app.port) )
-app.serve_forever()
+except OSError as e:
+    app.logger.info("Port Is Already In Use")

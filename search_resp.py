@@ -118,6 +118,24 @@ SETTINGS = {
 
 class SearchEngine:
 
+    """ Class that makes an instance of each search system
+
+        Attributes:
+            self.url = search url
+            self.list_start = start list of answer search system
+            self.list_end = end of list
+            self.citat = describe teg
+            self.val = settings["val"]
+            self.link = link teg
+            self.element = element teg
+            self.sign = sign of search
+
+            self.iterator = number of answer in one page
+            self.start_number = start number
+            self.key = page key
+            And logger of library can call'd like self.logger
+    """
+
     def __init__(self, settings):
         self.url = settings["url"]
         self.list_start = settings["list_start"]
@@ -131,7 +149,7 @@ class SearchEngine:
         self.header = None
         if 'header' in settings:
             self.header = settings['header']
-        
+
         self.iterator = settings["iterator"]
         self.start_number = settings["start_number"]
         self.key = settings["key"]
@@ -245,7 +263,7 @@ class SearchEngine:
                 pattern_citat = re.compile(
                     self.citat + ".+?" + back_header, re.DOTALL)
 
-                m_citat = pattern_citat.search(this_elem)                
+                m_citat = pattern_citat.search(this_elem)
                 if m_citat is not None:
                     citat_str = m_citat.group()
                 else:
@@ -263,6 +281,13 @@ class SearchEngine:
 
 class ResultsMerger:
 
+    """ Class, which makes non-blocking requests
+        to the search system and return final page
+
+        Attributes:
+            And logger of library can call'd like self.logger
+    """
+
     def __init__(self, engines):
         self.arr_engines = engines
 
@@ -271,7 +296,7 @@ class ResultsMerger:
             if elem in v:
                 return k
 
-    def search(self, query, output, max_count):
+    def search(self, query, max_count):
         global_start_time = time.time()
         all_ = []
         arr_obj = []
@@ -326,17 +351,15 @@ class ResultsMerger:
         sort_all = sorted(all_, key=lambda x: x[3], reverse=True)
         new_all = sort_all[:]
         Number_of_page_elem = 0
-
-        with open(output, "w", encoding='utf-8') as fp:
-            fp.write(''' 
+        output = '''
                 <style>
                     h3 {
                         font-family: Arial, sans-serif;
-                        margin: 5px; 
-                    } 
+                        margin: 5px;
+                    }
                     p {
                         font-family: Verdana, Arial, Helvetica, sans-serif;
-                        margin: 5px; 
+                        margin: 5px;
                     }
                     .g{
                         margin: 5px;
@@ -346,52 +369,40 @@ class ResultsMerger:
                         background: #f5f5f5;
                         padding: 0 20px;
                         font-family: Arial, sans-serif;
-                        
+
                     }
                     .marg{
                         margin-left:50px;
                         font-size: 16px;
                     }
                 </style>
-            ''')
-        with open(output, "a", encoding='utf-8') as fp:
-            for al in new_all[:int(max_count)]:
-                # INDEX
-                fp.write('''<div class="g">''')
-                fp.write("<p>№ " + str(Number_of_page_elem) +
-                         '''\t<span class="marg">Index:''' +
-                         str(al[3]) +
-                         "</span></p>")
-                # Link
-                fp.write("<h3><a href=" +
-                         str(al[0]) + ">" + str(al[1]) + "</a></h3>")
-                # Citat
-                fp.write("<p>" + str(al[2]) + "</p>")
-                fp.write("</div>")
-                fp.write("<br><br>")
-                Number_of_page_elem += 1
-        with open(output) as fp:
-            page = fp.read()
-        return page
+            '''
 
+        for al in new_all[:int(max_count)]:
+            # INDEX
+            output += '''<div class="g">'''
+            output += ("<p>№ " + str(Number_of_page_elem) +
+                       '''\t<span class="marg">Index:''' +
+                       str(al[3]) +
+                       "</span></p>")
+            # Link
+            output += ("<h3><a href=" +
+                       str(al[0]) + ">" + str(al[1]) + "</a></h3>")
+            # Citat
+            output += ("<p>" + str(al[2]) + "</p>")
+            output += ("</div>")
+            output += ("<br><br>")
+            Number_of_page_elem += 1
 
-def main_console():
-    logger = logging.getLogger(__name__)
-    engines = []
-    for key, value in SETTINGS.items():
-        engines.append(SearchEngine(SETTINGS[key]))
-        logger.info(SETTINGS[key])
-
-    merger = ResultsMerger(engines)
-    max_count = sys.argv[1]
-    query = sys.argv[2:]
-
-    output = os.path.join(os.getcwd(), 'output.html')
-    page = merger.search(query, output, max_count)
-    sys.stdout.write(page)
+        return output
 
 
 def main_import(request, number, search_sys_dict):
+    """ The method must import class server.
+        What makes a direct request and returns the final page
+
+        logger can call'd like logger
+    """
     global logger
     logger = logging.getLogger(__name__)
     engines = []
@@ -405,10 +416,5 @@ def main_import(request, number, search_sys_dict):
     merger = ResultsMerger(engines)
     query = request
     max_count = number
-
-    output = os.path.join(os.getcwd(), 'output.html')
-    page = merger.search(query, output, max_count)
+    page = merger.search(query, max_count)
     return page
-
-if __name__ == '__main__':
-    main_console()
