@@ -207,9 +207,7 @@ class SearchEngine:
             payload[self.sign] = str("+".join(query))
             res = client.get(self.url,
                              params=payload,
-                             nonblocking=True,
-                             output=os.path.join(os.getcwd(),
-                                                 "socket_page.html"))
+                             nonblocking=True)
             arr.append(res)
         return arr
 
