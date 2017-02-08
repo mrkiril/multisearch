@@ -308,7 +308,7 @@ class ResultsMerger:
             arr_status = [ob.isready() for ob in arr_obj]
             if False in arr_status:
                 sleep(0.05)
-                if time.time() - global_start_time > 1.0:
+                if time.time() - global_start_time > 3.5:
                     break
                 if time.time() - global_start_time > 0.9:
                     count = arr_status.count(True)

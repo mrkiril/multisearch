@@ -62,9 +62,7 @@ class MyServer(BaseServer):
             output = main_import(request=req_req, number="20",
                              search_sys_dict=self.dict_search_sys)
         
-        except HttpErrors as e:
-            print(e.args)
-            print(e.args[0])
+        except HttpErrors as e:            
             return self.any_error_page(e.args[0])
         else:
             return HttpResponse(output, content_type='text/html')
