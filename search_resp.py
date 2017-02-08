@@ -320,8 +320,8 @@ class ResultsMerger:
             else:
                 break
 
-        logger.info("all time: " + str(time.time() - global_start_time))
-        if True not in arr_obj:
+        logger.info("all time: " + str(time.time() - global_start_time))        
+        if True not in arr_status:            
             raise HttpErrors(500)
              
         # parse res obj and take page data
