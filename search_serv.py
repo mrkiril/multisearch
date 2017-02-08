@@ -15,7 +15,9 @@ from httpserver import HtCode
 from httpserver import HttpErrors
 from time import sleep
 
+
 class MyServer(BaseServer):
+
     """ Class of a base class that implements
         configure method of the list of pages.
         And methods which this pages returned
@@ -60,9 +62,9 @@ class MyServer(BaseServer):
         req_req = req["q"].split("+")
         try:
             output = main_import(request=req_req, number="20",
-                             search_sys_dict=self.dict_search_sys)
-        
-        except HttpErrors as e:            
+                                 search_sys_dict=self.dict_search_sys)
+
+        except HttpErrors as e:
             return self.any_error_page(e.args[0])
         else:
             return HttpResponse(output, content_type='text/html')
@@ -84,57 +86,52 @@ class MyServer(BaseServer):
             else:
                 return HttpResponse(data, content_type='text/css')
 
-    
     def test_timeout(self, request):
         with open(os.path.join(BaseServer.file_path,
                                "pages",
                                "http_ans.html"), "r") as fp:
             data = fp.read()
-        story = HtCode.get_story("500")        
+        story = HtCode.get_story("500")
         data = re.sub('<h1 name="number">Ooops ... Error .*?</h1>',
-                  '<h1 name="number">Ooops ... Error 500</h1>'
-                  , data)
+                      '<h1 name="number">Ooops ... Error 500</h1>', data)
 
         data = re.sub('<h1 name="description"><small></small></h1>',
-                  '<h1 name="description"><small>' + story + '</small></h1>'
-                  , data)
+                      '<h1 name="description"><small>' + story +
+                      '</small></h1>', data)
         sleep(5)
         return HttpResponse(data,
                             status_code="500",
-                            content_type='html')            
-
+                            content_type='html')
 
     def any_error_page(self, err_code):
         with open(os.path.join(BaseServer.file_path,
                                "pages",
                                "http_ans.html"), "r") as fp:
             data = fp.read()
-        story = HtCode.get_story(str(err_code))        
+        story = HtCode.get_story(str(err_code))
         data = re.sub('<h1 name="number">Ooops ... Error .*?</h1>',
-                  '<h1 name="number">Ooops ... Error '+str(err_code)+'</h1>'
-                  , data)
+                      '<h1 name="number">Ooops ... Error ' + str(err_code) +
+                      '</h1>', data)
 
         data = re.sub('<h1 name="description"><small></small></h1>',
-                  '<h1 name="description"><small>' + story + '</small></h1>'
-                  , data)        
+                      '<h1 name="description"><small>' + story +
+                      '</small></h1>', data)
         return HttpResponse(data,
                             status_code=str(err_code),
                             content_type='html')
-
 
     def test_505(self, request):
         with open(os.path.join(BaseServer.file_path,
                                "pages",
                                "http_ans.html"), "r") as fp:
             data = fp.read()
-        story = HtCode.get_story("505")        
+        story = HtCode.get_story("505")
         data = re.sub('<h1 name="number">Ooops ... Error .*?</h1>',
-                  '<h1 name="number">Ooops ... Error 505</h1>'
-                  , data)
+                      '<h1 name="number">Ooops ... Error 505</h1>', data)
 
         data = re.sub('<h1 name="description"><small></small></h1>',
-                  '<h1 name="description"><small>' + story + '</small></h1>'
-                  , data)
+                      '<h1 name="description"><small>' + story +
+                      '</small></h1>', data)
         return HttpResponse(data,
                             status_code="505",
                             content_type='html')
@@ -142,9 +139,9 @@ class MyServer(BaseServer):
     def test_301(self, request):
         if request.method == "POST":
             data = "POST Req"
-            data += " ".join( request.headers )
+            data += " ".join(request.headers)
             data += "\r\n"
-            data += " ".join( request.POST )
+            data += " ".join(request.POST)
             return HttpResponse(data,
                                 status_code="301",
                                 content_type='html',
@@ -160,9 +157,9 @@ class MyServer(BaseServer):
         self.add_route(r'^/$', self.main_page)
         self.add_route(r'^/search$', self.meta_search)
         self.add_route(r'^/form/.*$', self.styles)
-        self.add_route(r'^/test_505$', self.test_505,["GET", "POST"])
-        self.add_route(r'^/test_timeout$', self.test_timeout,["GET", "POST"])
-        self.add_route(r'^/test_301$', self.test_301,["GET", "POST"])
+        self.add_route(r'^/test_505$', self.test_505, ["GET", "POST"])
+        self.add_route(r'^/test_timeout$', self.test_timeout, ["GET", "POST"])
+        self.add_route(r'^/test_301$', self.test_301, ["GET", "POST"])
 
     def rewrite_main_file(self, file):
         newline = re.sub("http://[^/]+/search", "http://" +
@@ -221,4 +218,3 @@ try:
     app.logger.info("Cry Baby")
 except OSError as e:
     app.logger.info(str(e.args[1]))
-    

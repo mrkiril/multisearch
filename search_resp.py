@@ -25,7 +25,7 @@ my_headers = [
 my_user_pass = ('kiril', 'supersecret')
 file_path = os.path.abspath(os.path.dirname(__file__))
 
-client = HttpClient(    
+client = HttpClient(
     connect_timeout=10,         # socket timeout on connect
     transfer_timeout=30,        # socket timeout on send/recv
     max_redirects=10,           # follow Location: header on 3xx response
@@ -320,10 +320,10 @@ class ResultsMerger:
             else:
                 break
 
-        logger.info("all time: " + str(time.time() - global_start_time))        
-        if True not in arr_status:            
+        logger.info("all time: " + str(time.time() - global_start_time))
+        if True not in arr_status:
             raise HttpErrors(500)
-             
+
         # parse res obj and take page data
         for ob in arr_obj:
             val = SearchEngine.parser(self.getinstance(obj_res_dick, ob), ob)

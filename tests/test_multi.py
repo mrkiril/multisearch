@@ -18,23 +18,18 @@ class Test_serv(unittest.TestCase):
 
     def setUp(self):
         logging.config.fileConfig(
-        os.path.join(os.getcwd(), "logging.conf"))
+            os.path.join(os.getcwd(), "logging.conf"))
         self.file_path = os.path.abspath(os.path.dirname(__file__))
         my_headers = [('User-Agent', 'Mozilla/4.0'), ('X-From', 'UA')]
         my_user_pass = ('kiril', 'supersecret')
 
-        self.client = HttpClient(            
+        self.client = HttpClient(
             connect_timeout=10,         # socket timeout on connect
             transfer_timeout=4,        # socket timeout on send/recv
-            # follow Location: header on 3xx response
             max_redirects=10,
-            # set Referer: header when follow location
             set_referer=True,
             keep_alive=3,               # Keep-alive socket up to N requests
-            # headers=my_headers,         # send custom headers
             http_version="1.1",         # use custom http/version
-            # auth=my_user_pass,          # http auth
-            # try again on socket or http/5xx errors
             retry=5,
             retry_delay=10)             # wait betweet tries
 
@@ -43,20 +38,20 @@ class Test_serv(unittest.TestCase):
         self.children = multiprocessing.Value('i', 0)
 
         self.p = multiprocessing.Process(target=self.process,
-                                    args=(self.children, ),
-                                    daemon=False)
+                                         args=(self.children, ),
+                                         daemon=False)
         self.p.start()
         self.pid = self.p.pid
         print("slave >> " + str(self.pid))
         print("head  >> " + str(os.getpid()))
         print("child >> " + str(self.children.value))
         config = configparser.ConfigParser()
-        config.read( os.path.join( self.file_path ,"..","setting", "setting.ini" ) )
-        print( os.path.join( self.file_path ,"..","setting", "setting.ini" ) )
+        config.read(os.path.join(self.file_path,
+                                 "..", "setting", "setting.ini"))
+        print(os.path.join(self.file_path, "..", "setting", "setting.ini"))
         self.ip = config['DEFAULT']["ip"]
         self.port = config['DEFAULT']["port"]
-        self.sock = self.ip+":"+self.port
-        
+        self.sock = self.ip + ":" + self.port
 
     def process(self, child_pid):
         children = subprocess.Popen(["python3", "search_serv.py"], shell=False)
@@ -86,34 +81,29 @@ class Test_serv(unittest.TestCase):
 
     def test_page(self):
         sleep(1)
-        
-        res = self.client.get('http://'+self.sock+'/search?q=tarantino',
-                                retry=1)
-              
-        self.assertEqual(res.status_code, "500")        
-        
-        
-       
-        res = self.client.get('http://'+self.sock+'/search?q=ragnar+lothbrok',
-                                output=os.path.join(self.file_path,
-                                                      "socket_page.html"))
+
+        res = self.client.get('http://' + self.sock + '/search?q=tarantino',
+                              retry=1)
+        self.assertEqual(res.status_code, "200")
+
+        res = self.client.get('http://' + self.sock + '/search'
+                              '?q=ragnar+lothbrok',
+                              output=os.path.join(self.file_path,
+                                                  "socket_page.html"))
         pat1 = re.search("ragnar", res.body)
         pat2 = re.search("lothbrok", res.body)
         self.assertEqual(res.status_code, "200")
         # перевірка на наявність слова в видачі
         self.assertIsNotNone(pat1)
         self.assertIsNotNone(pat2)
-        
-        
+
         res = self.client.get(
-            'http://'+self.sock+'/wrong_page.,!@#$%^&*(WTF_page)')        
+            'http://' + self.sock + '/wrong_page.,!@#$%^&*(WTF_page)')
         self.assertEqual(res.status_code, "404")
 
-        
-        res = self.client.get('http://'+self.sock+'/test_timeout') 
+        res = self.client.get('http://' + self.sock + '/test_timeout')
         self.assertEqual(res.status_code, "")
-        
-        
+
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         addr = (self.ip, int(self.port))
         sock.connect(addr)
@@ -121,7 +111,7 @@ class Test_serv(unittest.TestCase):
         q = b"GETT /search?q=tarantino HTTP/1.1" + CRLF
         q += b"User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)" + \
             CRLF
-        q += b"Host: "+self.sock.encode() + CRLF
+        q += b"Host: " + self.sock.encode() + CRLF
         q += b"Connection: Close" + CRLF
         q += CRLF
         sock.send(q)
@@ -139,7 +129,7 @@ class Test_serv(unittest.TestCase):
         q = b"/GET /search?q=tarantino HTTP/1.1" + CRLF
         q += b"User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)" + \
             CRLF
-        q += b"Host: "+self.sock.encode() + CRLF
+        q += b"Host: " + self.sock.encode() + CRLF
         q += b"Connection: Close" + CRLF
         q += CRLF
         sock.send(q)
@@ -149,7 +139,7 @@ class Test_serv(unittest.TestCase):
         status_code = status.group(1).decode()
         self.assertEqual(status_code, "400")
         sock.close()
-        
+
 
 if __name__ == '__main__':
     unittest.main()
