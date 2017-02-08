@@ -16,6 +16,7 @@ from time import sleep
 import logging
 from urllib.parse import unquote
 from httpclient import HttpClient
+from httpserver import HttpErrors
 
 my_headers = [
     ('User-Agent', "Opera/9.80 (iPhone; Opera Mini/7.0.4/28.2555; U; fr)"
@@ -24,11 +25,7 @@ my_headers = [
 my_user_pass = ('kiril', 'supersecret')
 file_path = os.path.abspath(os.path.dirname(__file__))
 
-client = HttpClient(
-    # load cookie from file before query
-    load_cookie=os.path.join(file_path, 'cookie.txt'),
-    # save cookie to file after query
-    save_cookie=os.path.join(file_path, 'cookie.txt'),
+client = HttpClient(    
     connect_timeout=10,         # socket timeout on connect
     transfer_timeout=30,        # socket timeout on send/recv
     max_redirects=10,           # follow Location: header on 3xx response
@@ -238,7 +235,7 @@ class SearchEngine:
 
             for elem in m_block:  # Аналіз кожного елемента видачі
                 this_elem = elem
-                cheсk_link = False
+                check_link = False
                 cheсk_citat = False
                 cheсk_ci = re.search(self.citat, this_elem)
                 if cheсk_ci is not None:
@@ -246,9 +243,9 @@ class SearchEngine:
 
                 cheсk_li = re.search(self.link, this_elem)
                 if cheсk_li is not None:
-                    cheсk_link = True
+                    check_link = True
 
-                if not cheсk_link or not cheсk_citat:
+                if not check_link or not cheсk_citat:
                     return None
 
                 tmp_get = self.get_link(this_elem)
@@ -311,7 +308,7 @@ class ResultsMerger:
             arr_status = [ob.isready() for ob in arr_obj]
             if False in arr_status:
                 sleep(0.05)
-                if time.time() - global_start_time > 3.5:
+                if time.time() - global_start_time > 1.0:
                     break
                 if time.time() - global_start_time > 0.9:
                     count = arr_status.count(True)
@@ -324,7 +321,9 @@ class ResultsMerger:
                 break
 
         logger.info("all time: " + str(time.time() - global_start_time))
-
+        if True not in arr_obj:
+            raise HttpErrors(500)
+             
         # parse res obj and take page data
         for ob in arr_obj:
             val = SearchEngine.parser(self.getinstance(obj_res_dick, ob), ob)

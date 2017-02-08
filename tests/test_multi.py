@@ -10,21 +10,22 @@ import multiprocessing
 from time import sleep
 import signal
 import configparser
+import logging
+import logging.config
+
 
 class Test_serv(unittest.TestCase):
 
     def setUp(self):
+        logging.config.fileConfig(
+        os.path.join(os.getcwd(), "logging.conf"))
         self.file_path = os.path.abspath(os.path.dirname(__file__))
         my_headers = [('User-Agent', 'Mozilla/4.0'), ('X-From', 'UA')]
         my_user_pass = ('kiril', 'supersecret')
 
-        self.client = HttpClient(
-            # load cookie from file before query
-            load_cookie=os.path.join(self.file_path, 'cookie.txt'),
-            # save cookie to file after query
-            save_cookie=os.path.join(self.file_path, 'cookie.txt'),
+        self.client = HttpClient(            
             connect_timeout=10,         # socket timeout on connect
-            transfer_timeout=30,        # socket timeout on send/recv
+            transfer_timeout=4,        # socket timeout on send/recv
             # follow Location: header on 3xx response
             max_redirects=10,
             # set Referer: header when follow location
@@ -37,14 +38,15 @@ class Test_serv(unittest.TestCase):
             retry=5,
             retry_delay=10)             # wait betweet tries
 
+        self.client.logger = logging.getLogger("httpclient_test")
         os.chdir("../")
         self.children = multiprocessing.Value('i', 0)
 
-        p = multiprocessing.Process(target=self.process,
+        self.p = multiprocessing.Process(target=self.process,
                                     args=(self.children, ),
                                     daemon=False)
-        p.start()
-        self.pid = p.pid
+        self.p.start()
+        self.pid = self.p.pid
         print("slave >> " + str(self.pid))
         print("head  >> " + str(os.getpid()))
         print("child >> " + str(self.children.value))
@@ -54,7 +56,7 @@ class Test_serv(unittest.TestCase):
         self.ip = config['DEFAULT']["ip"]
         self.port = config['DEFAULT']["port"]
         self.sock = self.ip+":"+self.port
-        #_=input()
+        
 
     def process(self, child_pid):
         children = subprocess.Popen(["python3", "search_serv.py"], shell=False)
@@ -67,32 +69,51 @@ class Test_serv(unittest.TestCase):
         print("head  >> " + str(os.getpid()))
         print("child >> " + str(self.children.value))
 
-        os.kill(self.pid, signal.SIGINT)
         os.kill(self.children.value, signal.SIGINT)
+        print("IS_ALIVE >> ", self.p.is_alive())
+        self.p.terminate()
+
+        try:
+            os.kill(self.children.value, signal.SIGINT)
+        except Exception as e:
+            print("try to kill child", self.children.value, " but Exception")
+            print(e.args)
+        try:
+            os.kill(self.pid, signal.SIGINT)
+        except Exception as e:
+            print("try to kill ", self.pid, " but Exception")
+            print(e.args)
 
     def test_page(self):
         sleep(1)
-        res = self.client.get('http://'+self.sock+'/search?q=tarantino')
-        pat1 = re.search("tarantino", res.body)
-        # перевірка на успішність запиту
-        self.assertEqual(res.status_code, "200")
-        # перевірка на наявність слова в видачі
-        self.assertIsNotNone(pat1)
-
-        res = self.client.get('http://'+self.sock+'/search?q=Рогнар+Лодброк')
-        pat1 = re.search("Рогнар", res.body)
-        pat2 = re.search("Лодброк", res.body)
-        # перевірка на успішність запиту
+        
+        res = self.client.get('http://'+self.sock+'/search?q=tarantino',
+                                retry=1)
+              
+        self.assertEqual(res.status_code, "500")        
+        
+        
+       
+        res = self.client.get('http://'+self.sock+'/search?q=ragnar+lothbrok',
+                                output=os.path.join(self.file_path,
+                                                      "socket_page.html"))
+        pat1 = re.search("ragnar", res.body)
+        pat2 = re.search("lothbrok", res.body)
         self.assertEqual(res.status_code, "200")
         # перевірка на наявність слова в видачі
         self.assertIsNotNone(pat1)
         self.assertIsNotNone(pat2)
-
+        
+        
         res = self.client.get(
-            'http://'+self.sock+'/wrong_page.,!@#$%^&*(WTF_page)')
-        # перевірка на успішність запиту
+            'http://'+self.sock+'/wrong_page.,!@#$%^&*(WTF_page)')        
         self.assertEqual(res.status_code, "404")
 
+        
+        res = self.client.get('http://'+self.sock+'/test_timeout') 
+        self.assertEqual(res.status_code, "")
+        
+        
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         addr = (self.ip, int(self.port))
         sock.connect(addr)
@@ -128,6 +149,7 @@ class Test_serv(unittest.TestCase):
         status_code = status.group(1).decode()
         self.assertEqual(status_code, "400")
         sock.close()
+        
 
 if __name__ == '__main__':
     unittest.main()
