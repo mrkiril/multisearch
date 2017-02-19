@@ -84,21 +84,16 @@ class Test_serv(unittest.TestCase):
 
         res = self.client.get('http://' + self.sock + '/search?q=tarantino',
                               retry=1)
-        self.assertEqual(res.status_code, "200")
-        # print(res.body)
-        _=input("Br point")
+        self.assertEqual(res.status_code, "200")        
         res = self.client.get('http://' + self.sock + '/search'
                               '?q=ragnar+lothbrok',
                               output=os.path.join(self.file_path,
                                                   "socket_page.html"))
-        
-
-        pat1 = re.search("ragnar", res.body)
-        pat2 = re.search("lothbrok", res.body)
+        self.assertRegex(res.body, "Ragnar")
+        self.assertRegex(res.body, "Lodbrok")
         self.assertEqual(res.status_code, "200")
         # перевірка на наявність слова в видачі
-        self.assertIsNotNone(pat1)
-        self.assertIsNotNone(pat2)
+        
 
         res = self.client.get(
             'http://' + self.sock + '/wrong_page.,!@#$%^&*(WTF_page)')
