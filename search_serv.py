@@ -63,7 +63,6 @@ class MyServer(BaseServer):
         try:
             output = main_import(request=req_req, number="20",
                                  search_sys_dict=self.dict_search_sys)
-
         except HttpErrors as e:
             return self.any_error_page(e.args[0])
         else:
@@ -209,7 +208,7 @@ class MyServer(BaseServer):
             return("127.0.0.1", int("8080"))
 
 try:
-    app = MyServer()
+    app = MyServer()    
     logging.config.fileConfig(
         os.path.join(os.getcwd(), "setting", "logging.conf"))
     app.logger.info("start >> " + str(os.getpid()))

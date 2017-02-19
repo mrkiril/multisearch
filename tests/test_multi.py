@@ -25,7 +25,7 @@ class Test_serv(unittest.TestCase):
 
         self.client = HttpClient(
             connect_timeout=10,         # socket timeout on connect
-            transfer_timeout=4,        # socket timeout on send/recv
+            transfer_timeout=5,        # socket timeout on send/recv
             max_redirects=10,
             set_referer=True,
             keep_alive=3,               # Keep-alive socket up to N requests
@@ -85,11 +85,14 @@ class Test_serv(unittest.TestCase):
         res = self.client.get('http://' + self.sock + '/search?q=tarantino',
                               retry=1)
         self.assertEqual(res.status_code, "200")
-
+        # print(res.body)
+        _=input("Br point")
         res = self.client.get('http://' + self.sock + '/search'
                               '?q=ragnar+lothbrok',
                               output=os.path.join(self.file_path,
                                                   "socket_page.html"))
+        
+
         pat1 = re.search("ragnar", res.body)
         pat2 = re.search("lothbrok", res.body)
         self.assertEqual(res.status_code, "200")
