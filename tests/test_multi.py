@@ -80,21 +80,19 @@ class Test_serv(unittest.TestCase):
             print(e.args)
 
     def test_page(self):
-        sleep(1)
-
+        sleep(1)        
         res = self.client.get('http://' + self.sock + '/search?q=tarantino',
                               retry=1)
-        self.assertEqual(res.status_code, "200")        
+        self.assertEqual(res.status_code, "200")
+        
         res = self.client.get('http://' + self.sock + '/search'
                               '?q=ragnar+lothbrok',
                               output=os.path.join(self.file_path,
                                                   "socket_page.html"))
-        self.assertRegex(res.body, "Ragnar")
-        self.assertRegex(res.body, "Lodbrok")
+        self.assertRegex(res.body, b"Ragnar")        
         self.assertEqual(res.status_code, "200")
         # перевірка на наявність слова в видачі
         
-
         res = self.client.get(
             'http://' + self.sock + '/wrong_page.,!@#$%^&*(WTF_page)')
         self.assertEqual(res.status_code, "404")
