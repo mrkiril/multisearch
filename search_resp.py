@@ -161,7 +161,7 @@ class SearchEngine:
 
     def get_link(self, block):
         m_link = re.search(
-            '''<a.*?href=".*?((http[^"]*).*?)>(.*?)</a>''', block, re.DOTALL)
+            '<a.*?href=".*?((http[^"]*).*?)>(.*?)</a>', block, re.DOTALL)
 
         res_link = ""
         res_link = m_link.group(2)
@@ -213,7 +213,7 @@ class SearchEngine:
         page_elements_numbers = 0
         # Повторення запитів на пошукову систему
         if res.issend:
-            data = res.body
+            data = res.body.decode(res.encoding)
 
             if self.list_start[-1] == ">":
                 # видідили список результатів
