@@ -25,7 +25,7 @@ class Test_serv(unittest.TestCase):
 
         self.client = HttpClient(
             connect_timeout=10,         # socket timeout on connect
-            transfer_timeout=5,        # socket timeout on send/recv
+            transfer_timeout=4,        # socket timeout on send/recv
             max_redirects=10,
             set_referer=True,
             keep_alive=3,               # Keep-alive socket up to N requests
@@ -92,6 +92,7 @@ class Test_serv(unittest.TestCase):
         self.assertRegex(res.body, b"Ragnar")        
         self.assertEqual(res.status_code, "200")
         # перевірка на наявність слова в видачі
+        
         
         res = self.client.get(
             'http://' + self.sock + '/wrong_page.,!@#$%^&*(WTF_page)')
