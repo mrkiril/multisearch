@@ -42,6 +42,7 @@ SETTINGS = {
 
     'google': {
         'url': 'http://www.google.com.ua/search',
+        'host': 'www.google.com.ua',
         'list_start': '<div id="ires"><ol>',
         'list_end': '</div></ol></div></div></div>',
         'element': '<div class="g">',
@@ -56,6 +57,7 @@ SETTINGS = {
 
     'mail': {
         'url': 'http://go.mail.ru/msearch',
+        'host': 'go.mail.ru',
         'list_start': '<ol class="result">',
         'list_end': '</ol><!-- FOUND: END -->',
         'element': '<li id="js-result_',
@@ -70,6 +72,7 @@ SETTINGS = {
 
     'sputnik': {
         'url': 'http://www.sputnik.ru/search',
+        'host': 'www.sputnik.ru',
         'list_start': '<div class="b-results js-results">',
         'list_end': '</div><div class="b-paging">',
         'element': '<a data-metrics=',
@@ -85,6 +88,7 @@ SETTINGS = {
 
     'yahoo': {
         'url': 'http://search.yahoo.com/search',
+        'host': 'search.yahoo.com',
         'list_start': '</style><section class="reg searchCenterMiddle">',
         'list_end': '</section></section>',
         'element': '<section class="dd algo',
@@ -99,6 +103,7 @@ SETTINGS = {
 
     'bing': {
         'url': 'http://www.bing.com/search',
+        'host': 'www.bing.com',
         'list_start': '<ol id="b_results"',
         'list_end': '</ol><ol id="b_context" ',
         'element': '<li class="b_algo',
@@ -133,7 +138,7 @@ class SearchEngine:
             And logger of library can call'd like self.logger
     """
 
-    def __init__(self, settings):
+    def __init__(self, settings, host_ip_table={}):
         self.url = settings["url"]
         self.list_start = settings["list_start"]
         self.list_end = settings["list_end"]
@@ -153,6 +158,7 @@ class SearchEngine:
         self.del_pattern = re.compile(
             "</?(b|strong|span|br|p|div|li|i)>|<(span|p|i|div|b|wbr|ul).*?>")
         self.file_path = os.path.abspath(os.path.dirname(__file__))
+        self.host_ip_table = host_ip_table
 
     def querry_constr(self, url, query, payload):
         q = url + "+".join(query)
@@ -202,6 +208,7 @@ class SearchEngine:
             payload[self.key] = str(
                 int(self.start_number) + index * int(self.iterator))
             payload[self.sign] = str("+".join(query))
+            client.host_ip_dic = self.host_ip_table            
             res = client.get(self.url,
                              params=payload,
                              nonblocking=True)
@@ -302,17 +309,16 @@ class ResultsMerger:
             arr_obj.extend(stack)
             obj_res_dick[elem] = stack
 
-        recv_time = time.time()
         # Take message body
         while True:
-            arr_status = [ob.isready() for ob in arr_obj]
+            arr_status = [ob.isready() for ob in arr_obj]                      
             if False in arr_status:
-                sleep(0.05)
+                sleep(0.005)
                 if time.time() - global_start_time > 3.5:
                     break
                 if time.time() - global_start_time > 0.9:
                     count = arr_status.count(True)
-                    if count / len(arr_status) > 0.6:
+                    if count / len(arr_status) > 0.5:
                         break
                     else:
                         continue
@@ -394,7 +400,7 @@ class ResultsMerger:
         return output
 
 
-def main_import(request, number, search_sys_dict):
+def main_import(request, number, search_sys_dict, host_ip_table):
     """ The method must import class server.
         What makes a direct request and returns the final page
 
@@ -407,7 +413,7 @@ def main_import(request, number, search_sys_dict):
                        for k, v in search_sys_dict.items() if v == "on"}
 
     for key, value in rewrite_setting.items():
-        engines.append(SearchEngine(SETTINGS[key]))
+        engines.append(SearchEngine(SETTINGS[key], host_ip_table))
         logger.info(key)
 
     merger = ResultsMerger(engines)

@@ -4,11 +4,13 @@ import os.path
 import os
 import sys
 import re
+import socket
 import logging
 import logging.config
 import configparser
 from search_resp import main_import
 from search_resp import SETTINGS
+from search_resp import client
 from httpserver import BaseServer
 from httpserver import HttpResponse
 from httpserver import HtCode
@@ -29,25 +31,27 @@ class MyServer(BaseServer):
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.file_path = os.path.abspath(os.path.dirname(__file__))
+        self.file_path = os.path.abspath(os.path.dirname(__file__))        
         self.setting_file_path = os.path.join(
             self.file_path, "setting", "setting.ini")
         self.dict_search_sys = self.setting_search_sys()
         self.ip, self.port = self.setting_connect()
         super(MyServer, self).__init__(self.ip, self.port)
+        self.host_ip_table = self.create_host_ip_table()       
+
+
+    def create_host_ip_table(self):
+        table = {}
+        for k, v in SETTINGS.items():
+            ip = socket.gethostbyname(v["host"])            
+            table[v["host"]] = ip
+        return table
 
     def main_page(self, request):
         with open("forms.html", "r") as fp:
             data = fp.read()
         data = self.rewrite_main_file(data)
         return HttpResponse(data, content_type='html')
-
-    def notfound(self, request, name):
-        with open("pages/418.html", "r") as fp:
-            data = fp.read()
-        return HttpResponse(data,
-                            status_code="418",
-                            content_type='html')
 
     def meta_search(self, request):
         sp = request.path.split("?")[1].split("&")
@@ -62,7 +66,8 @@ class MyServer(BaseServer):
         req_req = req["q"].split("+")
         try:
             output = main_import(request=req_req, number="20",
-                                 search_sys_dict=self.dict_search_sys)
+                                 search_sys_dict=self.dict_search_sys,
+                                 host_ip_table=self.host_ip_table)
         except HttpErrors as e:
             return self.any_error_page(e.args[0])
         else:
@@ -85,22 +90,16 @@ class MyServer(BaseServer):
             else:
                 return HttpResponse(data, content_type='text/css')
 
-    def test_timeout(self, request):
-        with open(os.path.join(BaseServer.file_path,
-                               "pages",
-                               "http_ans.html"), "r") as fp:
-            data = fp.read()
-        story = HtCode.get_story("500")
-        data = re.sub('<h1 name="number">Ooops ... Error .*?</h1>',
-                      '<h1 name="number">Ooops ... Error 500</h1>', data)
+    
+    def post(self, request):
+        data = ""
+        for k, v in request.headers.items():
+            data += stt(k)+"\t"+str(v)
+        data += "\r\n\r\n"
+        for k, v in request.POST.items():
+            data += stt(k)+"\t"+str(v)
+        return HttpResponse(data, content_type='html')
 
-        data = re.sub('<h1 name="description"><small></small></h1>',
-                      '<h1 name="description"><small>' + story +
-                      '</small></h1>', data)
-        sleep(5)
-        return HttpResponse(data,
-                            status_code="500",
-                            content_type='html')
 
     def any_error_page(self, err_code):
         with open(os.path.join(BaseServer.file_path,
@@ -119,46 +118,11 @@ class MyServer(BaseServer):
                             status_code=str(err_code),
                             content_type='html')
 
-    def test_505(self, request):
-        with open(os.path.join(BaseServer.file_path,
-                               "pages",
-                               "http_ans.html"), "r") as fp:
-            data = fp.read()
-        story = HtCode.get_story("505")
-        data = re.sub('<h1 name="number">Ooops ... Error .*?</h1>',
-                      '<h1 name="number">Ooops ... Error 505</h1>', data)
-
-        data = re.sub('<h1 name="description"><small></small></h1>',
-                      '<h1 name="description"><small>' + story +
-                      '</small></h1>', data)
-        return HttpResponse(data,
-                            status_code="505",
-                            content_type='html')
-
-    def test_301(self, request):
-        if request.method == "POST":
-            data = "POST Req"
-            data += " ".join(request.headers)
-            data += "\r\n"
-            data += " ".join(request.POST)
-            return HttpResponse(data,
-                                status_code="301",
-                                content_type='html',
-                                location="http://google.com.ua")
-        else:
-            data = ""
-            return HttpResponse(data,
-                                status_code="301",
-                                content_type='html',
-                                location="http://google.com.ua")
-
     def configure(self):
         self.add_route(r'^/$', self.main_page)
         self.add_route(r'^/search$', self.meta_search)
         self.add_route(r'^/form/.*$', self.styles)
-        self.add_route(r'^/test_505$', self.test_505, ["GET", "POST"])
-        self.add_route(r'^/test_timeout$', self.test_timeout, ["GET", "POST"])
-        self.add_route(r'^/test_301$', self.test_301, ["GET", "POST"])
+        self.add_route(r'^/post/.*$', self.styles, ["POST"])
 
     def rewrite_main_file(self, file):
         newline = re.sub("http://[^/]+/search", "http://" +
@@ -208,12 +172,13 @@ class MyServer(BaseServer):
             return("127.0.0.1", int("8080"))
 
 try:
-    app = MyServer()    
+    app = MyServer()
     logging.config.fileConfig(
         os.path.join(os.getcwd(), "setting", "logging.conf"))
-    app.logger.info("start >> " + str(os.getpid()))
+    app.logger.info("serv start in " + str(os.getpid()))
     app.logger.info(str(app.ip) + " : " + str(app.port))
     app.serve_forever()
     app.logger.info("Cry Baby")
+
 except OSError as e:
     app.logger.info(str(e.args[1]))
