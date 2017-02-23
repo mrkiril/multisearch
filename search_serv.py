@@ -180,5 +180,5 @@ try:
     app.serve_forever()
     app.logger.info("Cry Baby")
 
-except OSError as e:
-    app.logger.info(str(e.args[1]))
+except OSError as e:    
+    app.logger.error('OSError ' + str(e.errno) + " " + os.strerror(e.errno))

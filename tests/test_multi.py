@@ -60,7 +60,7 @@ class Test_serv(unittest.TestCase):
         print("OLOLO >> ", child_pid.value)
 
     def tearDown(self):
-        sleep(1)
+        sleep(2)
         print("slave >> " + str(self.pid))
         print("head  >> " + str(os.getpid()))
         print("child >> " + str(self.children.value))
