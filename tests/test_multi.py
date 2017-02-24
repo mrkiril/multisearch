@@ -49,7 +49,6 @@ class Test_serv(unittest.TestCase):
         config = configparser.ConfigParser()
         config.read(os.path.join(self.file_path,
                                  "..", "setting", "setting.ini"))
-        print(os.path.join(self.file_path, "..", "setting", "setting.ini"))
         self.ip = config['DEFAULT']["ip"]
         self.port = config['DEFAULT']["port"]
         self.sock = self.ip + ":" + self.port
@@ -57,22 +56,14 @@ class Test_serv(unittest.TestCase):
     def process(self, child_pid):
         children = subprocess.Popen(["python3", "search_serv.py"], shell=False)
         child_pid.value = children.pid
-        print("OLOLO >> ", child_pid.value)
 
     def tearDown(self):
-        sleep(2)
+        sleep(1)
         print("slave >> " + str(self.pid))
         print("head  >> " + str(os.getpid()))
         print("child >> " + str(self.children.value))
         os.kill(self.children.value, signal.SIGINT)
         print("IS_ALIVE >> ", self.p.is_alive())
-        sleep(1)
-        try:
-           os.kill(self.children.value, signal.SIGINT)
-        except Exception as e:
-           print("try to kill child", self.children.value, " but Exception")
-           print(e.args)
-
 
     def test_page(self):
         sleep(1)
@@ -104,15 +95,14 @@ class Test_serv(unittest.TestCase):
                                data={'k1': 'value', 'k2': 'eulav'})
         self.assertEqual(res.status_code, "415")
 
-        
-
+        # GETT неіснуючий запит
+        #
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         addr = (self.ip, int(self.port))
         sock.connect(addr)
         CRLF = b"\r\n"
         q = b"GETT /search?q=tarantino HTTP/1.1" + CRLF
-        q += b"User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)" + \
-            CRLF
+        q += b"User-Agent: Mozilla/4.0" + CRLF
         q += b"Host: " + self.sock.encode() + CRLF
         q += b"Connection: Close" + CRLF
         q += CRLF
@@ -124,13 +114,14 @@ class Test_serv(unittest.TestCase):
         self.assertEqual(status_code, "400")
         sock.close()
 
+        # CRLF перед запитом
+        # погані хедери
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         addr = (self.ip, int(self.port))
         sock.connect(addr)
         CRLF = b"\r\n"
         q = b"\r\n\r\nGET /search?q=tarantino HTTP/1.1" + CRLF
-        q += b"User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)" + \
-            CRLF
+        q += b"User-Agent: Mozilla/4.0" + CRLF
         q += b"Host: " + self.sock.encode() + CRLF
         q += b"Connection: Close" + CRLF
         q += CRLF

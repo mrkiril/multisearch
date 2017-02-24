@@ -208,7 +208,7 @@ class SearchEngine:
             payload[self.key] = str(
                 int(self.start_number) + index * int(self.iterator))
             payload[self.sign] = str("+".join(query))
-            client.host_ip_dic = self.host_ip_table            
+            client.host_ip_dic = self.host_ip_table
             res = client.get(self.url,
                              params=payload,
                              nonblocking=True)
@@ -311,7 +311,7 @@ class ResultsMerger:
 
         # Take message body
         while True:
-            arr_status = [ob.isready() for ob in arr_obj]                      
+            arr_status = [ob.isready() for ob in arr_obj]
             if False in arr_status:
                 sleep(0.005)
                 if time.time() - global_start_time > 3.5:

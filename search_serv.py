@@ -13,7 +13,6 @@ from search_resp import SETTINGS
 from search_resp import client
 from httpserver import BaseServer
 from httpserver import HttpResponse
-from httpserver import HtCode
 from httpserver import HttpErrors
 from time import sleep
 
@@ -31,19 +30,18 @@ class MyServer(BaseServer):
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.file_path = os.path.abspath(os.path.dirname(__file__))        
+        self.file_path = os.path.abspath(os.path.dirname(__file__))
         self.setting_file_path = os.path.join(
             self.file_path, "setting", "setting.ini")
         self.dict_search_sys = self.setting_search_sys()
         self.ip, self.port = self.setting_connect()
         super(MyServer, self).__init__(self.ip, self.port)
-        self.host_ip_table = self.create_host_ip_table()       
-
+        self.host_ip_table = self.create_host_ip_table()
 
     def create_host_ip_table(self):
         table = {}
         for k, v in SETTINGS.items():
-            ip = socket.gethostbyname(v["host"])            
+            ip = socket.gethostbyname(v["host"])
             table[v["host"]] = ip
         return table
 
@@ -69,7 +67,7 @@ class MyServer(BaseServer):
                                  search_sys_dict=self.dict_search_sys,
                                  host_ip_table=self.host_ip_table)
         except HttpErrors as e:
-            return self.any_error_page(e.args[0])
+            return e.geterr()
         else:
             return HttpResponse(output, content_type='text/html')
 
@@ -90,39 +88,17 @@ class MyServer(BaseServer):
             else:
                 return HttpResponse(data, content_type='text/css')
 
-    
     def post(self, request):
-        data = ""
-        for k, v in request.headers.items():
-            data += stt(k)+"\t"+str(v)
-        data += "\r\n\r\n"
+        data = ""        
         for k, v in request.POST.items():
-            data += stt(k)+"\t"+str(v)
+            data += str(k) + "   " + str(v)+"\r\n"
         return HttpResponse(data, content_type='html')
-
-
-    def any_error_page(self, err_code):
-        with open(os.path.join(BaseServer.file_path,
-                               "pages",
-                               "http_ans.html"), "r") as fp:
-            data = fp.read()
-        story = HtCode.get_story(str(err_code))
-        data = re.sub('<h1 name="number">Ooops ... Error .*?</h1>',
-                      '<h1 name="number">Ooops ... Error ' + str(err_code) +
-                      '</h1>', data)
-
-        data = re.sub('<h1 name="description"><small></small></h1>',
-                      '<h1 name="description"><small>' + story +
-                      '</small></h1>', data)
-        return HttpResponse(data,
-                            status_code=str(err_code),
-                            content_type='html')
 
     def configure(self):
         self.add_route(r'^/$', self.main_page)
         self.add_route(r'^/search$', self.meta_search)
         self.add_route(r'^/form/.*$', self.styles)
-        self.add_route(r'^/post/.*$', self.styles, ["POST"])
+        self.add_route(r'^/post$', self.post, ["POST"])
 
     def rewrite_main_file(self, file):
         newline = re.sub("http://[^/]+/search", "http://" +
@@ -180,5 +156,5 @@ try:
     app.serve_forever()
     app.logger.info("Cry Baby")
 
-except OSError as e:    
+except OSError as e:
     app.logger.error('OSError ' + str(e.errno) + " " + os.strerror(e.errno))
