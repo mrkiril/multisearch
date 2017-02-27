@@ -310,15 +310,24 @@ class ResultsMerger:
             obj_res_dick[elem] = stack
 
         # Take message body
-        while True:
-            arr_status = [ob.isready() for ob in arr_obj]
-            if False in arr_status:
+        obj_status_dick = {}
+        while True:            
+            # arr_status = [ob.isready() for ob in arr_obj]            
+            for ob in arr_obj:
+                if (ob not in obj_status_dick or
+                        obj_status_dick[ob] is not None):
+                
+                    obj_status_dick[ob] = ob.isready()
+
+
+            lenn = len(obj_status_dick.values())
+            if False in list(obj_status_dick.values()):
                 sleep(0.005)
                 if time.time() - global_start_time > 3.5:
                     break
                 if time.time() - global_start_time > 0.9:
-                    count = arr_status.count(True)
-                    if count / len(arr_status) > 0.5:
+                    count = list(obj_status_dick.values()).count(True)
+                    if count / lenn > 0.5:
                         break
                     else:
                         continue
@@ -327,7 +336,7 @@ class ResultsMerger:
                 break
 
         logger.info("all time: " + str(time.time() - global_start_time))
-        if True not in arr_status:
+        if True not in obj_status_dick.values():
             raise HttpErrors(500)
 
         # parse res obj and take page data

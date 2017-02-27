@@ -41,8 +41,16 @@ class MyServer(BaseServer):
     def create_host_ip_table(self):
         table = {}
         for k, v in SETTINGS.items():
-            ip = socket.gethostbyname(v["host"])
-            table[v["host"]] = ip
+            ip = socket.gethostbyname(v["host"])            
+            pat = re.search("\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}", str(ip))
+            if pat is not None:
+                self.logger.error(v["host"]+" >> "+ str(ip))
+                table[v["host"]] = ip
+            else:
+                self.logger.error("DNS Error")
+                self.logger.error(str(ip))
+
+        self.logger.debug("ip take from host is OK")
         return table
 
     def main_page(self, request):
@@ -77,8 +85,8 @@ class MyServer(BaseServer):
             with open(path, "r") as fp:
                 data = fp.read()
 
-        except Exception as e:
-            app.logger.error(e)
+        except FileNotFoundError as e:
+            self.logger.error(e)
         else:
             if b"bootstrap.js" in request.text:
                 return HttpResponse(data,
@@ -147,10 +155,10 @@ class MyServer(BaseServer):
                 " Start server on default setting 127.0.0.1:8080")
             return("127.0.0.1", int("8080"))
 
-try:
-    app = MyServer()
+try:    
     logging.config.fileConfig(
         os.path.join(os.getcwd(), "setting", "logging.conf"))
+    app = MyServer()
     app.logger.info("serv start in " + str(os.getpid()))
     app.logger.info(str(app.ip) + " : " + str(app.port))
     app.serve_forever()
