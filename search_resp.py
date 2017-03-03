@@ -219,7 +219,8 @@ class SearchEngine:
         results = []  # масив лінків, описів і цитат
         page_elements_numbers = 0
         # Повторення запитів на пошукову систему
-        if res.issend:
+        if res.issend and res.encoding is not None:
+            logger.debug("encoding: "+str(res.encoding))
             data = res.body.decode(res.encoding)
 
             if self.list_start[-1] == ">":
@@ -277,8 +278,10 @@ class SearchEngine:
 
                 results.append([m_link_link, m_link_header,
                                 m_citat_citat, elem_index_of])
-
-        return results
+            return results
+        else:
+            return None
+        
 
 
 class ResultsMerger:
@@ -338,7 +341,7 @@ class ResultsMerger:
         if True not in obj_status_dick.values():
             raise HttpErrors(500)
 
-        for ob, stat in obj_status_dick.items():
+        for ob, stat in obj_status_dick.items():            
             if stat:
                 val = SearchEngine.parser(
                     self.getinstance(obj_res_dick, ob), ob)
