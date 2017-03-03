@@ -100,7 +100,7 @@ class MyServer(BaseServer):
         data = ""
         for k, v in request.POST.items():
             data += str(k) + "   " + str(v) + "\r\n"
-        return HttpResponse(data, content_type='html')
+        return HttpResponse(data.encode(), content_type='html')
 
     def configure(self):
         self.add_route(r'^/$', self.main_page)
