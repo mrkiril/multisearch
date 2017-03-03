@@ -325,7 +325,7 @@ class ResultsMerger:
                 sleep(0.005)
                 if time.time() - global_start_time > 3.5:
                     break
-                if time.time() - global_start_time > 0.9:
+                if time.time() - global_start_time > 1.9:
                     count = list(obj_status_dick.values()).count(True)
                     if count / lenn > 0.5:
                         break
@@ -340,10 +340,19 @@ class ResultsMerger:
             raise HttpErrors(500)
 
         # parse res obj and take page data
-        for ob in arr_obj:
-            val = SearchEngine.parser(self.getinstance(obj_res_dick, ob), ob)
-            if val is not None:
-                all_.extend(val)
+        #for ob in arr_obj:
+        #    val = SearchEngine.parser(self.getinstance(obj_res_dick, ob), ob)
+        #    if val is not None:
+        #        all_.extend(val)
+
+        for ob, stat in obj_status_dick.items():
+            if stat:
+                val = SearchEngine.parser(self.getinstance(obj_res_dick, ob), ob)
+                if val is not None:
+                    all_.extend(val)
+
+
+
 
         logger.info("Count Q: " + str(len(all_)))
         for i in range(len(all_)):
@@ -389,8 +398,7 @@ class ResultsMerger:
                     }
                 </style>
             '''
-
-        for al in new_all[:int(max_count)]:
+        for al in new_all[:int(max_count)]:            
             # INDEX
             output += '''<div class="g">'''
             output += ("<p>№ " + str(Number_of_page_elem) +
@@ -404,9 +412,8 @@ class ResultsMerger:
             output += ("<p>" + str(al[2]) + "</p>")
             output += ("</div>")
             output += ("<br><br>")
-            Number_of_page_elem += 1
-
-        return output
+            Number_of_page_elem += 1        
+        return output.encode()
 
 
 def main_import(request, number, search_sys_dict, host_ip_table):

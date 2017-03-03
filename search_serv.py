@@ -56,7 +56,7 @@ class MyServer(BaseServer):
     def main_page(self, request):
         with open("forms.html", "r") as fp:
             data = fp.read()
-        data = self.rewrite_main_file(data)
+        data = self.rewrite_main_file(data).encode()
         return HttpResponse(data, content_type='html')
 
     def meta_search(self, request):
@@ -82,7 +82,7 @@ class MyServer(BaseServer):
     def styles(self, request):
         path = os.path.join(os.getcwd(), request.path[1:])
         try:
-            with open(path, "r") as fp:
+            with open(path, "rb") as fp:
                 data = fp.read()
 
         except FileNotFoundError as e:
