@@ -311,14 +311,13 @@ class ResultsMerger:
 
         # Take message body
         obj_status_dick = {}
-        while True:            
-            # arr_status = [ob.isready() for ob in arr_obj]            
+        while True:
+            # arr_status = [ob.isready() for ob in arr_obj]
             for ob in arr_obj:
                 if (ob not in obj_status_dick or
                         obj_status_dick[ob] is not None):
-                
-                    obj_status_dick[ob] = ob.isready()
 
+                    obj_status_dick[ob] = ob.isready()
 
             lenn = len(obj_status_dick.values())
             if False in list(obj_status_dick.values()):
@@ -339,20 +338,12 @@ class ResultsMerger:
         if True not in obj_status_dick.values():
             raise HttpErrors(500)
 
-        # parse res obj and take page data
-        #for ob in arr_obj:
-        #    val = SearchEngine.parser(self.getinstance(obj_res_dick, ob), ob)
-        #    if val is not None:
-        #        all_.extend(val)
-
         for ob, stat in obj_status_dick.items():
             if stat:
-                val = SearchEngine.parser(self.getinstance(obj_res_dick, ob), ob)
+                val = SearchEngine.parser(
+                    self.getinstance(obj_res_dick, ob), ob)
                 if val is not None:
                     all_.extend(val)
-
-
-
 
         logger.info("Count Q: " + str(len(all_)))
         for i in range(len(all_)):
@@ -398,7 +389,7 @@ class ResultsMerger:
                     }
                 </style>
             '''
-        for al in new_all[:int(max_count)]:            
+        for al in new_all[:int(max_count)]:
             # INDEX
             output += '''<div class="g">'''
             output += ("<p>№ " + str(Number_of_page_elem) +
@@ -412,7 +403,7 @@ class ResultsMerger:
             output += ("<p>" + str(al[2]) + "</p>")
             output += ("</div>")
             output += ("<br><br>")
-            Number_of_page_elem += 1        
+            Number_of_page_elem += 1
         return output.encode()
 
 

@@ -41,10 +41,10 @@ class MyServer(BaseServer):
     def create_host_ip_table(self):
         table = {}
         for k, v in SETTINGS.items():
-            ip = socket.gethostbyname(v["host"])            
+            ip = socket.gethostbyname(v["host"])
             pat = re.search("\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}", str(ip))
             if pat is not None:
-                self.logger.error(v["host"]+" >> "+ str(ip))
+                self.logger.error(v["host"] + " >> " + str(ip))
                 table[v["host"]] = ip
             else:
                 self.logger.error("DNS Error")
@@ -97,9 +97,9 @@ class MyServer(BaseServer):
                 return HttpResponse(data, content_type='text/css')
 
     def post(self, request):
-        data = ""        
+        data = ""
         for k, v in request.POST.items():
-            data += str(k) + "   " + str(v)+"\r\n"
+            data += str(k) + "   " + str(v) + "\r\n"
         return HttpResponse(data, content_type='html')
 
     def configure(self):
@@ -155,7 +155,7 @@ class MyServer(BaseServer):
                 " Start server on default setting 127.0.0.1:8080")
             return("127.0.0.1", int("8080"))
 
-try:    
+try:
     logging.config.fileConfig(
         os.path.join(os.getcwd(), "setting", "logging.conf"))
     app = MyServer()
