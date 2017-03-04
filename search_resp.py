@@ -210,7 +210,7 @@ class SearchEngine:
             payload[self.sign] = str("+".join(query))
             client.host_ip_dic = self.host_ip_table
             res = client.get(self.url,
-                             params=payload,                             
+                             params=payload,                                                         
                              nonblocking=True)
             arr.append(res)
         return arr
@@ -337,13 +337,12 @@ class ResultsMerger:
                 if (ob not in obj_status_dick or
                         obj_status_dick[ob] == False):
 
-                    obj_status_dick[ob] = ob.isready()
-                    
+                    obj_status_dick[ob] = ob.isready()                    
             print(obj_status_dick.values())
             lenn = len(obj_status_dick.values())
             if False in list(obj_status_dick.values()):
                 sleep(0.05)
-                if time.time() - global_start_time > 0.9:
+                if time.time() - global_start_time > 0.95:
                     break
                 if time.time() - global_start_time > 0.8:
                     count = list(obj_status_dick.values()).count(True)
