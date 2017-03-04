@@ -310,8 +310,9 @@ class ResultsMerger:
             And logger of library can call'd like self.logger
     """
 
-    def __init__(self, engines):
+    def __init__(self, engines, max_wait_time):
         self.arr_engines = engines
+        self.max_wait_time = max_wait_time
 
     def getinstance(self, dick, elem):
         for k, v in dick.items():
@@ -341,15 +342,15 @@ class ResultsMerger:
             print(obj_status_dick.values())
             lenn = len(obj_status_dick.values())
             if False in list(obj_status_dick.values()):
-                sleep(0.05)
-                if time.time() - global_start_time > 0.95:
+                sleep(0.005)
+                if time.time() - global_start_time > self.max_wait_time:
                     break
                 if time.time() - global_start_time > 0.8:
                     count = list(obj_status_dick.values()).count(True)
                     if count / lenn > 0.5:
                         break
-                    else:
-                        continue
+                    elif True in obj_status_dick.values():
+                        break
                 continue
             else:
                 break
@@ -428,7 +429,8 @@ class ResultsMerger:
         return output.encode()
 
 
-def main_import(request, number, search_sys_dict, host_ip_table):
+def main_import(request, number, search_sys_dict, 
+                host_ip_table, max_wait_time):
     """ The method must import class server.
         What makes a direct request and returns the final page
 
@@ -444,7 +446,8 @@ def main_import(request, number, search_sys_dict, host_ip_table):
         engines.append(SearchEngine(SETTINGS[key], host_ip_table))
         logger.info(key)
 
-    merger = ResultsMerger(engines)
+    merger = ResultsMerger(engines=engines,
+                           max_wait_time=max_wait_time)
     query = request
     max_count = number
     page = merger.search(query, max_count)

@@ -37,6 +37,8 @@ class MyServer(BaseServer):
         self.ip, self.port = self.setting_connect()
         super(MyServer, self).__init__(self.ip, self.port)
         self.host_ip_table = self.create_host_ip_table()
+        self.max_wait_time = self.setting_max_time()
+
 
     def create_host_ip_table(self):
         table = {}
@@ -60,20 +62,18 @@ class MyServer(BaseServer):
         return HttpResponse(data, content_type='html')
 
     def meta_search(self, request):
-        sp = request.path.split("?")[1].split("&")
-        req = {}
-        for s in sp:
-            tmp = s.split("=")
-            req[tmp[0]] = tmp[1]
-
-        if req["q"] == "":
+        if "q" not in request.GET:
             return self.main_page(request)
 
-        req_req = req["q"].split("+")
+        if request.GET["q"] == "":
+            return self.main_page(request)
+        
         try:
-            output = main_import(request=req_req, number="20",
+            output = main_import(request=request.GET["q"], 
+                                 number="20",
                                  search_sys_dict=self.dict_search_sys,
-                                 host_ip_table=self.host_ip_table)
+                                 host_ip_table=self.host_ip_table,
+                                 max_wait_time=self.max_wait_time)
         except HttpErrors as e:
             return e.geterr()
         else:
@@ -112,6 +112,22 @@ class MyServer(BaseServer):
         newline = re.sub("http://[^/]+/search", "http://" +
                          str(self.ip) + ":" + str(self.port) + "/search", file)
         return newline
+
+    def setting_max_time(self):
+        config = configparser.ConfigParser()
+        config.read(self.setting_file_path)
+        if "max_wait_time" in config:
+            conf = config['max_wait_time']
+            if 'max_time' in conf:
+                self.logger.info("Setting max time is ok")
+                return(float(conf["max_time"]))
+
+            else:
+                self.logger.info("Setting max time is broken. Use default")
+                return(1.5)
+        else:
+            self.logger.info("Setting max time is broken. Use default")
+            return(1.5)
 
     def setting_search_sys(self):
         config = configparser.ConfigParser()
