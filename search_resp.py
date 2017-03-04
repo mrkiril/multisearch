@@ -219,9 +219,22 @@ class SearchEngine:
         results = []  # масив лінків, описів і цитат
         page_elements_numbers = 0
         # Повторення запитів на пошукову систему
-        if res.issend and res.encoding is not None:
-            logger.debug("encoding: "+str(res.encoding))
-            data = res.body.decode(res.encoding)
+        logger.debug("encoding: "+str(res.encoding))
+        if res.issend:
+            enc = ["ISO-8859-1","utf-8"]
+            if res.encoding is not None:                
+                enc.insert(3, str(res.encoding))
+            
+            for en in enc:
+                try:
+                    data = res.body.decode(res.encoding)
+                except UnicodeDecodeError as e:
+                    logger.debug(str(e))
+                    if en == enc[-1]:
+                        return None
+                    continue                
+                else:
+                    break
 
             if self.list_start[-1] == ">":
                 # видідили список результатів
@@ -324,7 +337,7 @@ class ResultsMerger:
 
             lenn = len(obj_status_dick.values())
             if False in list(obj_status_dick.values()):
-                sleep(0.005)
+                sleep(0.05)
                 if time.time() - global_start_time > 3.5:
                     break
                 if time.time() - global_start_time > 1.9:
