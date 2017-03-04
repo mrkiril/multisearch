@@ -210,7 +210,7 @@ class SearchEngine:
             payload[self.sign] = str("+".join(query))
             client.host_ip_dic = self.host_ip_table
             res = client.get(self.url,
-                             params=payload,
+                             params=payload,                             
                              nonblocking=True)
             arr.append(res)
         return arr
@@ -219,21 +219,24 @@ class SearchEngine:
         results = []  # масив лінків, описів і цитат
         page_elements_numbers = 0
         # Повторення запитів на пошукову систему
-        logger.debug("encoding: "+str(res.encoding))
+        logger.debug("is send: "+str(res.issend)+";  encoding: "+str(res.encoding))
+        
         if res.issend:
             enc = ["ISO-8859-1","utf-8"]
             if res.encoding is not None:                
-                enc.insert(3, str(res.encoding))
+                enc.insert(0, str(res.encoding))
             
             for en in enc:
                 try:
+                    logger.debug("Try encoding with "+str(res.encoding))
                     data = res.body.decode(res.encoding)
                 except UnicodeDecodeError as e:
+                    logger.debug("UnicodeDecodeError "+str(res.encoding))
                     logger.debug(str(e))
                     if en == enc[-1]:
                         return None
                     continue                
-                else:
+                else:                    
                     break
 
             if self.list_start[-1] == ">":
@@ -252,22 +255,23 @@ class SearchEngine:
                     m_block = self.block_finder(m_pattern.group())
 
                 else:
+                    logger.debug("M_Pattern: NONE")
                     return None
 
             for elem in m_block:  # Аналіз кожного елемента видачі
                 this_elem = elem
                 check_link = False
                 cheсk_citat = False
-                cheсk_ci = re.search(self.citat, this_elem)
+                cheсk_ci = re.search(self.citat, this_elem, re.DOTALL)
                 if cheсk_ci is not None:
                     cheсk_citat = True
 
-                cheсk_li = re.search(self.link, this_elem)
+                cheсk_li = re.search(self.link, this_elem, re.DOTALL)
                 if cheсk_li is not None:
                     check_link = True
 
-                if not check_link or not cheсk_citat:
-                    return None
+                if not check_link or not cheсk_citat:                    
+                    continue
 
                 tmp_get = self.get_link(this_elem)
                 m_link_link = tmp_get[0]
@@ -331,16 +335,17 @@ class ResultsMerger:
             # arr_status = [ob.isready() for ob in arr_obj]
             for ob in arr_obj:
                 if (ob not in obj_status_dick or
-                        obj_status_dick[ob] is not None):
+                        obj_status_dick[ob] == False):
 
                     obj_status_dick[ob] = ob.isready()
-
+                    
+            print(obj_status_dick.values())
             lenn = len(obj_status_dick.values())
             if False in list(obj_status_dick.values()):
                 sleep(0.05)
-                if time.time() - global_start_time > 3.5:
-                    break
                 if time.time() - global_start_time > 0.9:
+                    break
+                if time.time() - global_start_time > 0.8:
                     count = list(obj_status_dick.values()).count(True)
                     if count / lenn > 0.5:
                         break
@@ -358,6 +363,7 @@ class ResultsMerger:
             if stat:
                 val = SearchEngine.parser(
                     self.getinstance(obj_res_dick, ob), ob)
+                logger.debug("VAL is not None: "+str(val is not None))
                 if val is not None:
                     all_.extend(val)
 
