@@ -80,10 +80,10 @@ class Test_serv(unittest.TestCase):
         # перевірка на наявність слова в видачі
 
         res = self.client.get('http://' + self.sock + '/search',
-                              params={"q": "Uma Turman"},
+                              params={"q": "Olimp"},
                               output=os.path.join(self.file_path,
                                                   "socket_page.html"))
-        self.assertRegex(res.body, b"Uma")
+        self.assertRegex(res.body, b"olimp")
         self.assertEqual(res.status_code, "200")
         # перевірка на наявність слова в видачі
 
@@ -120,7 +120,7 @@ class Test_serv(unittest.TestCase):
         addr = (self.ip, int(self.port))
         sock.connect(addr)
         CRLF = b"\r\n"
-        q = b"\r\n\r\nGET /search?q=tarantino HTTP/1.1" + CRLF
+        q = b"\r\n\r\nGET /search?q=dino HTTP/1.1" + CRLF
         q += b"User-Agent: Mozilla/4.0" + CRLF
         q += b"Host: " + self.sock.encode() + CRLF
         q += b"Connection: Close" + CRLF
