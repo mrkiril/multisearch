@@ -340,7 +340,7 @@ class ResultsMerger:
                 sleep(0.05)
                 if time.time() - global_start_time > 3.5:
                     break
-                if time.time() - global_start_time > 1.9:
+                if time.time() - global_start_time > 0.9:
                     count = list(obj_status_dick.values()).count(True)
                     if count / lenn > 0.5:
                         break
