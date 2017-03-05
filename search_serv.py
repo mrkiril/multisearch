@@ -153,8 +153,8 @@ class MyServer(BaseServer):
     def setting_connect(self):
         config = configparser.ConfigParser()
         config.read(self.setting_file_path)
-        if "DEFAULT" in config:
-            conf = config['DEFAULT']
+        if "ip_port_setting" in config:
+            conf = config['ip_port_setting']
             if 'ip' in conf and 'port' in conf:
                 self.logger.info("Setting is ok")
                 return(conf["ip"], int(conf["port"]))

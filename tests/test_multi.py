@@ -49,8 +49,8 @@ class Test_serv(unittest.TestCase):
         config = configparser.ConfigParser()
         config.read(os.path.join(self.file_path,
                                  "..", "setting", "setting.ini"))
-        self.ip = config['DEFAULT']["ip"]
-        self.port = config['DEFAULT']["port"]
+        self.ip = config['ip_port_setting']["ip"]
+        self.port = config['ip_port_setting']["port"]
         self.sock = self.ip + ":" + self.port
 
     def process(self, child_pid):
