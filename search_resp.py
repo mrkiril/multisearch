@@ -207,10 +207,14 @@ class SearchEngine:
         for index in range((int(max_count) // 10)):
             payload[self.key] = str(
                 int(self.start_number) + index * int(self.iterator))
-            payload[self.sign] = str("+".join(query))
+            payload[self.sign] = query
             client.host_ip_dic = self.host_ip_table
+
+            h_url = re.search("https?://.+?\.(.+?)\..+?/", self.url).group(1)
+
             res = client.get(self.url,
-                             params=payload,                                                         
+                             params=payload,
+                             # output=h_url + "_" + str(index) + ".html",
                              nonblocking=True)
             arr.append(res)
         return arr
@@ -219,24 +223,25 @@ class SearchEngine:
         results = []  # масив лінків, описів і цитат
         page_elements_numbers = 0
         # Повторення запитів на пошукову систему
-        logger.debug("is send: "+str(res.issend)+";  encoding: "+str(res.encoding))
-        
+        h_url = re.search("https?://(.+?)/", res.url).group(1)
+        logger.debug(h_url + " is send: " + str(res.issend) +
+                     ";  encoding: " + str(res.encoding))
         if res.issend:
-            enc = ["ISO-8859-1","utf-8"]
-            if res.encoding is not None:                
+            enc = ["ISO-8859-1", "utf-8"]
+            if res.encoding is not None:
                 enc.insert(0, str(res.encoding))
-            
+
             for en in enc:
                 try:
-                    logger.debug("Try encoding with "+str(res.encoding))
+                    logger.debug("Try encoding with " + str(res.encoding))
                     data = res.body.decode(res.encoding)
                 except UnicodeDecodeError as e:
-                    logger.debug("UnicodeDecodeError "+str(res.encoding))
+                    logger.debug("UnicodeDecodeError " + str(res.encoding))
                     logger.debug(str(e))
                     if en == enc[-1]:
                         return None
-                    continue                
-                else:                    
+                    continue
+                else:
                     break
 
             if self.list_start[-1] == ">":
@@ -270,7 +275,7 @@ class SearchEngine:
                 if cheсk_li is not None:
                     check_link = True
 
-                if not check_link or not cheсk_citat:                    
+                if not check_link or not cheсk_citat:
                     continue
 
                 tmp_get = self.get_link(this_elem)
@@ -298,7 +303,6 @@ class SearchEngine:
             return results
         else:
             return None
-        
 
 
 class ResultsMerger:
@@ -338,16 +342,16 @@ class ResultsMerger:
                 if (ob not in obj_status_dick or
                         obj_status_dick[ob] == False):
 
-                    obj_status_dick[ob] = ob.isready()                    
+                    obj_status_dick[ob] = ob.isready()
             print(obj_status_dick.values())
             lenn = len(obj_status_dick.values())
             if False in list(obj_status_dick.values()):
-                sleep(0.005)
+                sleep(0.001)
                 if time.time() - global_start_time > self.max_wait_time:
                     break
-                if time.time() - global_start_time > 0.8:
+                if time.time() - global_start_time > 0.95:
                     count = list(obj_status_dick.values()).count(True)
-                    if count / lenn > 0.5:
+                    if count / lenn > 0.49:
                         break
                     elif True in obj_status_dick.values():
                         break
@@ -355,15 +359,16 @@ class ResultsMerger:
             else:
                 break
 
-        logger.info("all time: " + str(time.time() - global_start_time))
+        logger.info(
+            "all time: " + str(round(time.time() - global_start_time, 4)))
         if True not in obj_status_dick.values():
             raise HttpErrors(500)
 
-        for ob, stat in obj_status_dick.items():            
+        for ob, stat in obj_status_dick.items():
             if stat:
                 val = SearchEngine.parser(
                     self.getinstance(obj_res_dick, ob), ob)
-                logger.debug("VAL is not None: "+str(val is not None))
+                logger.debug("VAL is not None: " + str(val is not None))
                 if val is not None:
                     all_.extend(val)
 
@@ -416,7 +421,7 @@ class ResultsMerger:
             output += '''<div class="g">'''
             output += ("<p>№ " + str(Number_of_page_elem) +
                        '''\t<span class="marg">Index:''' +
-                       str(al[3]) +
+                       str(round(al[3], 4)) +
                        "</span></p>")
             # Link
             output += ("<h3><a href=" +
@@ -429,7 +434,7 @@ class ResultsMerger:
         return output.encode()
 
 
-def main_import(request, number, search_sys_dict, 
+def main_import(request, number, search_sys_dict,
                 host_ip_table, max_wait_time):
     """ The method must import class server.
         What makes a direct request and returns the final page

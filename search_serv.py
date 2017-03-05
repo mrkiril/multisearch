@@ -46,11 +46,10 @@ class MyServer(BaseServer):
             ip = socket.gethostbyname(v["host"])
             pat = re.search("\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}", str(ip))
             if pat is not None:
-                self.logger.error(v["host"] + " >> " + str(ip))
+                self.logger.info(v["host"] + " >> " + str(ip))
                 table[v["host"]] = ip
             else:
-                self.logger.error("DNS Error")
-                self.logger.error(str(ip))
+                self.logger.error("DNS Error with "+str(ip))
 
         self.logger.debug("ip take from host is OK")
         return table
