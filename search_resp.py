@@ -323,6 +323,9 @@ class ResultsMerger:
             if elem in v:
                 return k
 
+    def final_time_dict(self, ob, global_start_time, time_list):
+        time_list.append((ob.host, round(time.time() - global_start_time, 3)))
+
     def search(self, query, max_count):
         global_start_time = time.time()
         all_ = []
@@ -335,15 +338,18 @@ class ResultsMerger:
             obj_res_dick[elem] = stack
 
         # Take message body
+        time_list = []
         obj_status_dick = {}
         while True:
             # arr_status = [ob.isready() for ob in arr_obj]
             for ob in arr_obj:
                 if (ob not in obj_status_dick or
                         obj_status_dick[ob] == False):
-
-                    obj_status_dick[ob] = ob.isready()
-            print(obj_status_dick.values())
+                    staus = ob.isready()
+                    obj_status_dick[ob] = staus
+                    if staus:
+                        self.final_time_dict(ob, global_start_time, time_list)
+            # print(obj_status_dick.values())
             lenn = len(obj_status_dick.values())
             if False in list(obj_status_dick.values()):
                 sleep(0.001)
@@ -416,6 +422,7 @@ class ResultsMerger:
                     }
                 </style>
             '''
+        output += self.table_creator(time_list)
         for al in new_all[:int(max_count)]:
             # INDEX
             output += '''<div class="g">'''
@@ -432,6 +439,23 @@ class ResultsMerger:
             output += ("<br><br>")
             Number_of_page_elem += 1
         return output.encode()
+
+    def table_creator(self, time_dick):
+        table = '<table class="table table-condensed">'
+        table += '''<thead>
+                        <tr>
+                          <th>Host</th>
+                          <th>Time</th>                          
+                        </tr>
+                      </thead><tbody>'''
+        for el in time_dick:
+            k, v = el
+            table += '<tr>'
+            table += '<td>' + str(k) + '</td>'
+            table += '<td>' + str(v) + '</td>'
+            table += '<tr>'
+        table += '</tbody></table>'
+        return table
 
 
 def main_import(request, number, search_sys_dict,

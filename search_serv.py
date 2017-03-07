@@ -39,7 +39,6 @@ class MyServer(BaseServer):
         self.host_ip_table = self.create_host_ip_table()
         self.max_wait_time = self.setting_max_time()
 
-
     def create_host_ip_table(self):
         table = {}
         for k, v in SETTINGS.items():
@@ -49,7 +48,7 @@ class MyServer(BaseServer):
                 self.logger.info(v["host"] + " >> " + str(ip))
                 table[v["host"]] = ip
             else:
-                self.logger.error("DNS Error with "+str(ip))
+                self.logger.error("DNS Error with " + str(ip))
 
         self.logger.debug("ip take from host is OK")
         return table
@@ -66,9 +65,9 @@ class MyServer(BaseServer):
 
         if request.GET["q"] == "":
             return self.main_page(request)
-        
+
         try:
-            output = main_import(request=request.GET["q"], 
+            output = main_import(request=request.GET["q"],
                                  number="20",
                                  search_sys_dict=self.dict_search_sys,
                                  host_ip_table=self.host_ip_table,
@@ -101,11 +100,33 @@ class MyServer(BaseServer):
             data += str(k) + "   " + str(v) + "\r\n"
         return HttpResponse(data.encode(), content_type='html')
 
+    def test(self, request):
+        self.send_data(request.POST["hed"].encode())
+
+    def wrong_encoding(self, request):
+        req = b""
+        CRLF = "\r\n"
+        q = ""
+        q += "HTTP/1.1 200 OK" + CRLF
+        q += "Connection: close" + CRLF
+        q += "Content-Length: 5" + CRLF
+        q += "Content-Type: text/html; charset=utf-8" + CRLF
+        q += "Set-Cookie: k=v; expires=ww*, "
+        q += "09-***-2019 23:12:40 GMT; path=/" + CRLF
+        q += CRLF
+        req += q.encode()
+        q = "ЛЯЛЯЛЯ ЛЯЛЯЛЯ"
+        req += q.encode("cp1251")
+        self.send_data(req)
+
     def configure(self):
         self.add_route(r'^/$', self.main_page)
         self.add_route(r'^/search$', self.meta_search)
         self.add_route(r'^/form/.*$', self.styles)
         self.add_route(r'^/post$', self.post, ["POST"])
+        self.add_route(r'^/test$', self.test, ["GET", "POST"])
+        self.add_route(r'^/wrong_encoding$',
+                       self.wrong_encoding, ["GET", "POST"])
 
     def rewrite_main_file(self, file):
         newline = re.sub("http://[^/]+/search", "http://" +
@@ -123,10 +144,10 @@ class MyServer(BaseServer):
 
             else:
                 self.logger.info("Setting max time is broken. Use default")
-                return(1.5)
+                return(10)
         else:
             self.logger.info("Setting max time is broken. Use default")
-            return(1.5)
+            return(10)
 
     def setting_search_sys(self):
         config = configparser.ConfigParser()

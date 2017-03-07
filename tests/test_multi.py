@@ -134,6 +134,68 @@ class Test_serv(unittest.TestCase):
         start, end = re.search(b"\r\n\r\n", response).span()
         self.assertEqual(status_code, "200")
 
+        # криві кукі від сервера
+        # невірний контент лен
+        # замість хтмл картинка
+        # а якщо прийде в UTF16 і не буде вказане кодування?
+        # прийде в 1251 а буде вказано utf-8 в заголовках та 1251 в тексті HTML
+        # ?
+
+        # data len is less that Content len num
+        #
+        #
+        CRLF = "\r\n"
+        q = ""
+        q += "HTTP/1.1 200 OK" + CRLF
+        q += "Connection: close" + CRLF
+        q += "Content-Length: 5" + CRLF
+        q += "Content-Type: text/html" + CRLF
+        q += CRLF
+        q += "w"
+        res = self.client.post('http://' + self.sock + '/test',
+                               data={"hed": q})
+        self.assertEqual(res.body, b"")
+
+        # data more that content len num
+        #
+        #
+        CRLF = "\r\n"
+        q = ""
+        q += "HTTP/1.1 200 OK" + CRLF
+        q += "Connection: close" + CRLF
+        q += "Content-Length: 5" + CRLF
+        q += "Content-Type: text/html" + CRLF
+        q += CRLF
+        q += "LALKA LALKA" * 10000
+        res = self.client.post('http://' + self.sock + '/test',
+                               data={"hed": q})
+        self.assertEqual(res.body, b"LALKA")
+
+        # Broke COOKIES
+        # cookies did not append to cookies dictionary
+        #
+        CRLF = "\r\n"
+        q = ""
+        q += "HTTP/1.1 200 OK" + CRLF
+        q += "Connection: close" + CRLF
+        q += "Content-Length: 5" + CRLF
+        q += "Content-Type: text/html; charset=utf-8" + CRLF
+        q += "Set-Cookie: k=v; "
+        q += "expires=ww*, 09-***-2019 23:12:40 GMT; path=/" + CRLF
+        q += CRLF
+        q += "LOLKO LOLKO"
+        res = self.client.post('http://' + self.sock + '/test',
+                               data={"hed": q})
+        self.assertEqual(res.body, b"LOLKO")
+        self.assertEqual(res.cook_dick, {})
+
+        # wrong_encoding
+        # body encode cp1251
+        # in headers utf-8
+        res = self.client.get('http://' + self.sock + '/wrong_encoding')
+        self.assertEqual(res.body.decode("cp1251"), "ЛЯЛЯЛЯ ЛЯЛЯЛЯ")
+        print(res.body)
+
 
 if __name__ == '__main__':
     unittest.main()
