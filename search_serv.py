@@ -124,7 +124,7 @@ class MyServer(BaseServer):
         self.add_route(r'^/search$', self.meta_search)
         self.add_route(r'^/form/.*$', self.styles)
         self.add_route(r'^/post$', self.post, ["POST"])
-        self.add_route(r'^/test$', self.test, ["GET", "POST"])
+        self.add_route(r'^/test$', self.test, ["POST"])
         self.add_route(r'^/wrong_encoding$',
                        self.wrong_encoding, ["GET", "POST"])
 
