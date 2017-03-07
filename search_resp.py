@@ -234,7 +234,7 @@ class SearchEngine:
             for en in enc:
                 try:
                     logger.debug("Try encoding with " + str(res.encoding))
-                    data = res.body.decode(res.encoding)
+                    data = res.body.decode(en)
                 except UnicodeDecodeError as e:
                     logger.debug("UnicodeDecodeError " + str(res.encoding))
                     logger.debug(str(e))
