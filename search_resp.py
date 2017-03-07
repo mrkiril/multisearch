@@ -241,6 +241,9 @@ class SearchEngine:
                     if en == enc[-1]:
                         return None
                     continue
+                except LookupError as e:
+                    logger.debug(str(e))
+                    continue
                 else:
                     break
 
