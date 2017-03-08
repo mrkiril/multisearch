@@ -75,6 +75,7 @@ class MyServer(BaseServer):
         except HttpErrors as e:
             return e.geterr()
         else:
+            output = self.rewrite_main_file(output).encode()
             return HttpResponse(output, content_type='text/html')
 
     def styles(self, request):

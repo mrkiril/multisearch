@@ -320,6 +320,7 @@ class ResultsMerger:
     def __init__(self, engines, max_wait_time):
         self.arr_engines = engines
         self.max_wait_time = max_wait_time
+        self.file_path = os.path.abspath(os.path.dirname(__file__))
 
     def getinstance(self, dick, elem):
         for k, v in dick.items():
@@ -398,67 +399,40 @@ class ResultsMerger:
 
         sort_all = sorted(all_, key=lambda x: x[3], reverse=True)
         new_all = sort_all[:]
-        Number_of_page_elem = 0
-        output = '''
-                <style>
-                    h3 {
-                        font-family: Arial, sans-serif;
-                        margin: 5px;
-                    }
-                    p {
-                        font-family: Verdana, Arial, Helvetica, sans-serif;
-                        margin: 5px;
-                    }
-                    .g{
-                        margin: 5px;
-                        padding: 10px;
-                        font-size: 14px;
-                        line-height: 20px;
-                        background: #f5f5f5;
-                        padding: 0 20px;
-                        font-family: Arial, sans-serif;
-
-                    }
-                    .marg{
-                        margin-left:50px;
-                        font-size: 16px;
-                    }
-                </style>
-            '''
-        output += self.table_creator(time_list)
+        
+        with open(os.path.join(self.file_path, "result.html"), "r") as fp:
+            data = fp.read()        
+        data = data.replace("<!--TABLE-->", self.table_creator(time_list, global_start_time))        
         for al in new_all[:int(max_count)]:
-            # INDEX
-            output += '''<div class="g">'''
-            output += ("<p>№ " + str(Number_of_page_elem) +
-                       '''\t<span class="marg">Index:''' +
-                       str(round(al[3], 4)) +
-                       "</span></p>")
-            # Link
-            output += ("<h3><a href=" +
-                       str(al[0]) + ">" + str(al[1]) + "</a></h3>")
-            # Citat
-            output += ("<p>" + str(al[2]) + "</p>")
-            output += ("</div>")
-            output += ("<br><br>")
-            Number_of_page_elem += 1
-        return output.encode()
+            new_elem = '''
+            <div class="g">            
+            <h4><a href="LINK">LI_STR</a></h4>
+            <p><strong><span class="marg">relevant index: INDEX</span></strong></p>
+            <p>DESCRIPTION</p>
+            </div>
+            <!--ELENENT-->
+            '''
+            new_elem = new_elem.replace("INDEX", str(round(al[3], 4)))
+            new_elem = new_elem.replace("LINK", str(al[0]))
+            new_elem = new_elem.replace("LI_STR", str(al[1]))            
+            new_elem = new_elem.replace("DESCRIPTION", str(al[2]))
+            data = data.replace("<!--ELENENT-->", new_elem)
+            
+        return data
 
-    def table_creator(self, time_dick):
-        table = '<table class="table table-condensed">'
-        table += '''<thead>
-                        <tr>
-                          <th>Host</th>
-                          <th>Time</th>                          
-                        </tr>
-                      </thead><tbody>'''
+    def table_creator(self, time_dick, global_start_time):
+        table = '''
+        <blockquote>
+          <p>Time to search is: ''' + str(round(time.time()- global_start_time,4))+'''</p>
+          <footer>TIMEVAL</footer>
+        </blockquote>'''
+        timeval_str = ""
         for el in time_dick:
             k, v = el
-            table += '<tr>'
-            table += '<td>' + str(k) + '</td>'
-            table += '<td>' + str(v) + '</td>'
-            table += '<tr>'
-        table += '</tbody></table>'
-        return table
+            timeval_str += str(k)+" - " +  str(v)+" sec;  "
+
+
+        return table.replace("TIMEVAL", timeval_str)
 
 
 def main_import(request, number, search_sys_dict,
