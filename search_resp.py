@@ -399,38 +399,42 @@ class ResultsMerger:
 
         sort_all = sorted(all_, key=lambda x: x[3], reverse=True)
         new_all = sort_all[:]
-        
+
         with open(os.path.join(self.file_path, "result.html"), "r") as fp:
-            data = fp.read()        
-        data = data.replace("<!--TABLE-->", self.table_creator(time_list, global_start_time))        
+            data = fp.read()
+        data = data.replace(
+            "<!--TABLE-->", self.table_creator(time_list, global_start_time))
         for al in new_all[:int(max_count)]:
             new_elem = '''
-            <div class="g">            
+            <div class="g">
             <h4><a href="LINK">LI_STR</a></h4>
-            <p><strong><span class="marg">relevant index: INDEX</span></strong></p>
+            <p>
+            <strong>
+            <span class="marg">relevant index: INDEX</span>
+            </strong>
+            </p>
             <p>DESCRIPTION</p>
             </div>
             <!--ELENENT-->
             '''
             new_elem = new_elem.replace("INDEX", str(round(al[3], 4)))
             new_elem = new_elem.replace("LINK", str(al[0]))
-            new_elem = new_elem.replace("LI_STR", str(al[1]))            
+            new_elem = new_elem.replace("LI_STR", str(al[1]))
             new_elem = new_elem.replace("DESCRIPTION", str(al[2]))
             data = data.replace("<!--ELENENT-->", new_elem)
-            
+
         return data
 
     def table_creator(self, time_dick, global_start_time):
         table = '''
         <blockquote>
-          <p>Time to search is: ''' + str(round(time.time()- global_start_time,4))+'''</p>
+          <p>Time to search is: ''' + str(round(time.time() - global_start_time, 4)) + '''</p>
           <footer>TIMEVAL</footer>
         </blockquote>'''
         timeval_str = ""
         for el in time_dick:
             k, v = el
-            timeval_str += str(k)+" - " +  str(v)+" sec;  "
-
+            timeval_str += str(k) + " - " + str(v) + " sec;  "
 
         return table.replace("TIMEVAL", timeval_str)
 

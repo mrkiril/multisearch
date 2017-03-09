@@ -73,6 +73,7 @@ class MyServer(BaseServer):
                                  host_ip_table=self.host_ip_table,
                                  max_wait_time=self.max_wait_time)
         except HttpErrors as e:
+            self.logger.debug(str(e))
             return e.geterr()
         else:
             output = self.rewrite_main_file(output).encode()
