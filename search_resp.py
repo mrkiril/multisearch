@@ -7,12 +7,12 @@
 # and merge result into HTML SERP page
 
 # TODO: implement it here
-import os.path
+
 import os
 import re
 import sys
 import time
-from time import sleep
+import os.path
 import logging
 from urllib.parse import unquote
 from httpclient import HttpClient
@@ -353,7 +353,7 @@ class ResultsMerger:
                         self.final_time_dict(ob, global_start_time, time_list)
             lenn = len(obj_status_dick.values())
             if False in list(obj_status_dick.values()):
-                sleep(0.001)
+                time.sleep(0.001)
                 if time.time() - global_start_time > self.max_wait_time:
                     break
                 if time.time() - global_start_time > 0.95:
@@ -400,7 +400,7 @@ class ResultsMerger:
         with open(os.path.join(self.file_path, "result.html"), "r") as fp:
             data = fp.read()
         
-        data = self.reqtoform_inputor(data, query)
+        data = self.reqto_form_title_inputor(data, query)
         data = data.replace(
             "<!--TABLE-->", self.table_creator(time_list, global_start_time))
         for al in new_all[:int(max_count)]:
@@ -422,9 +422,10 @@ class ResultsMerger:
             new_elem = new_elem.replace("DESCRIPTION", str(al[2]))
             data = data.replace("<!--ELENENT-->", new_elem)
         return data
-
-    def reqtoform_inputor(self, data, request):
+    
+    def reqto_form_title_inputor(self, data, request):        
         request = request.replace("+", " ")
+        request = unquote_plus(request)
         return data.replace("REQUEST", request)
 
     def table_creator(self, time_dick, global_start_time):
