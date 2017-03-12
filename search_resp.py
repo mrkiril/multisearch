@@ -15,6 +15,7 @@ import time
 import os.path
 import logging
 from urllib.parse import unquote
+from urllib.parse import unquote_plus
 from httpclient import HttpClient
 from httpserver import HttpErrors
 
@@ -379,7 +380,7 @@ class ResultsMerger:
                 if val is not None:
                     all_.extend(val)
 
-        logger.info("Count Q: " + str(len(all_)))        
+        logger.info("Count Q: " + str(len(all_)))
         for i in range(len(all_)):
             iteration = i + 1
             stop = False
@@ -399,7 +400,7 @@ class ResultsMerger:
 
         with open(os.path.join(self.file_path, "result.html"), "r") as fp:
             data = fp.read()
-        
+
         data = self.reqto_form_title_inputor(data, query)
         data = data.replace(
             "<!--TABLE-->", self.table_creator(time_list, global_start_time))
@@ -422,10 +423,9 @@ class ResultsMerger:
             new_elem = new_elem.replace("DESCRIPTION", str(al[2]))
             data = data.replace("<!--ELENENT-->", new_elem)
         return data
-    
-    def reqto_form_title_inputor(self, data, request):        
-        request = request.replace("+", " ")
-        request = unquote(request)
+
+    def reqto_form_title_inputor(self, data, request):
+        request = unquote_plus(request)
         return data.replace("REQUEST", request)
 
     def table_creator(self, time_dick, global_start_time):
