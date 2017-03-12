@@ -209,9 +209,7 @@ class SearchEngine:
                 int(self.start_number) + index * int(self.iterator))
             payload[self.sign] = query
             client.host_ip_dic = self.host_ip_table
-
             h_url = re.search("https?://.+?\.(.+?)\..+?/", self.url).group(1)
-
             res = client.get(self.url,
                              params=payload,
                              # output=h_url + "_" + str(index) + ".html",
@@ -331,6 +329,7 @@ class ResultsMerger:
         time_list.append((ob.host, round(time.time() - global_start_time, 3)))
 
     def search(self, query, max_count):
+
         global_start_time = time.time()
         all_ = []
         arr_obj = []
@@ -345,7 +344,6 @@ class ResultsMerger:
         time_list = []
         obj_status_dick = {}
         while True:
-            # arr_status = [ob.isready() for ob in arr_obj]
             for ob in arr_obj:
                 if (ob not in obj_status_dick or
                         obj_status_dick[ob] == False):
@@ -353,7 +351,6 @@ class ResultsMerger:
                     obj_status_dick[ob] = staus
                     if staus:
                         self.final_time_dict(ob, global_start_time, time_list)
-            # print(obj_status_dick.values())
             lenn = len(obj_status_dick.values())
             if False in list(obj_status_dick.values()):
                 sleep(0.001)
@@ -382,7 +379,7 @@ class ResultsMerger:
                 if val is not None:
                     all_.extend(val)
 
-        logger.info("Count Q: " + str(len(all_)))
+        logger.info("Count Q: " + str(len(all_)))        
         for i in range(len(all_)):
             iteration = i + 1
             stop = False
@@ -402,6 +399,8 @@ class ResultsMerger:
 
         with open(os.path.join(self.file_path, "result.html"), "r") as fp:
             data = fp.read()
+        
+        data = self.reqtoform_inputor(data, query)
         data = data.replace(
             "<!--TABLE-->", self.table_creator(time_list, global_start_time))
         for al in new_all[:int(max_count)]:
@@ -422,8 +421,11 @@ class ResultsMerger:
             new_elem = new_elem.replace("LI_STR", str(al[1]))
             new_elem = new_elem.replace("DESCRIPTION", str(al[2]))
             data = data.replace("<!--ELENENT-->", new_elem)
-
         return data
+
+    def reqtoform_inputor(self, data, request):
+        request = request.replace("+", " ")
+        return data.replace("REQUEST", request)
 
     def table_creator(self, time_dick, global_start_time):
         table = '''
