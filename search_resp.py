@@ -425,7 +425,7 @@ class ResultsMerger:
     
     def reqto_form_title_inputor(self, data, request):        
         request = request.replace("+", " ")
-        request = unquote_plus(request)
+        request = unquote(request)
         return data.replace("REQUEST", request)
 
     def table_creator(self, time_dick, global_start_time):
