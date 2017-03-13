@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import os.path
+
 import os
 import sys
 import re
 import socket
+import string
 import logging
-import logging.config
+import os.path
 import configparser
-from search_resp import main_import
-from search_resp import SETTINGS
+import logging.config
+from time import sleep
+
 from search_resp import client
+from search_resp import SETTINGS
+from httpserver import HttpErrors
 from httpserver import BaseServer
 from httpserver import HttpResponse
-from httpserver import HttpErrors
-from time import sleep
+from search_resp import main_import
+from urllib.parse import quote_plus
+from urllib.parse import unquote_plus
 
 
 class MyServer(BaseServer):
@@ -60,6 +65,7 @@ class MyServer(BaseServer):
         return HttpResponse(data, content_type='html')
 
     def meta_search(self, request):
+        print(request.GET["q"])
         if "q" not in request.GET:
             return self.main_page(request)
 
@@ -67,7 +73,8 @@ class MyServer(BaseServer):
             return self.main_page(request)
 
         try:
-            output = main_import(request=request.GET["q"],
+            request = self.filter_enter_data(request.GET["q"])
+            output = main_import(request=request,
                                  number="20",
                                  search_sys_dict=self.dict_search_sys,
                                  host_ip_table=self.host_ip_table,
@@ -76,6 +83,7 @@ class MyServer(BaseServer):
             self.logger.debug(str(e))
             return e.geterr()
         else:
+            output = self.filter_out_data(output)
             output = self.rewrite_main_file(output).encode()
             return HttpResponse(output, content_type='text/html')
 
@@ -120,6 +128,28 @@ class MyServer(BaseServer):
         q = "ЛЯЛЯЛЯ ЛЯЛЯЛЯ"
         req += q.encode("cp1251")
         self.send_data(req)
+
+    def filter_enter_data(self, search_str):
+        search_str = unquote_plus(search_str)
+        search_str = search_str[:300]
+        search_str = search_str.split(' ', 7)
+        search_str = " ".join(search_str[:7])
+        search_str = quote_plus(search_str)
+        return search_str
+
+    def filter_out_data(self, out_data):
+        html_dick = {
+            "<": "&lt;",
+            ">": "&gt;",
+            "&": "&amp;",
+            "‘": "&lsquo;",
+            "’": "&rsquo;",
+            '“': "&ldquo;",
+            '”': "&rdquo;",
+        }
+        for k, v in html_dick.items():
+            out_data = out_data.replace(k, v)
+        return out_data
 
     def configure(self):
         self.add_route(r'^/$', self.main_page)
