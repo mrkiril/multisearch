@@ -83,7 +83,6 @@ class MyServer(BaseServer):
             self.logger.debug(str(e))
             return e.geterr()
         else:
-            output = self.filter_out_data(output)
             output = self.rewrite_main_file(output).encode()
             return HttpResponse(output, content_type='text/html')
 
@@ -131,25 +130,14 @@ class MyServer(BaseServer):
 
     def filter_enter_data(self, search_str):
         search_str = unquote_plus(search_str)
-        search_str = search_str[:300]
-        search_str = search_str.split(' ', 7)
-        search_str = " ".join(search_str[:7])
+        new_str = "".join([s for s in search_str if ord(s) > 31])
+        search_str = new_str[:300]
+        search_str = re.sub(r'\s+', ' ', search_str)
+        search_str = re.sub('\s+', ' ', search_str)
+        search_str = re.sub('^ ', '', search_str)
+        search_str = re.sub(' $', '', search_str)
         search_str = quote_plus(search_str)
         return search_str
-
-    def filter_out_data(self, out_data):
-        html_dick = {
-            "<": "&lt;",
-            ">": "&gt;",
-            "&": "&amp;",
-            "‘": "&lsquo;",
-            "’": "&rsquo;",
-            '“': "&ldquo;",
-            '”': "&rdquo;",
-        }
-        for k, v in html_dick.items():
-            out_data = out_data.replace(k, v)
-        return out_data
 
     def configure(self):
         self.add_route(r'^/$', self.main_page)

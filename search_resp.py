@@ -405,7 +405,7 @@ class ResultsMerger:
         data = data.replace(
             "<!--TABLE-->", self.table_creator(time_list, global_start_time))
         for al in new_all[:int(max_count)]:
-            new_elem = '''
+            n_el = '''
             <div class="g">
             <h4><a href="LINK">LI_STR</a></h4>
             <p>
@@ -417,16 +417,30 @@ class ResultsMerger:
             </div>
             <!--ELENENT-->
             '''
-            new_elem = new_elem.replace("INDEX", str(round(al[3], 4)))
-            new_elem = new_elem.replace("LINK", str(al[0]))
-            new_elem = new_elem.replace("LI_STR", str(al[1]))
-            new_elem = new_elem.replace("DESCRIPTION", str(al[2]))
-            data = data.replace("<!--ELENENT-->", new_elem)
+            n_el = n_el.replace("INDEX", str(round(al[3], 4)))
+            n_el = n_el.replace("LINK", self.filter_out(str(al[0])))
+            n_el = n_el.replace("LI_STR", self.filter_out(str(al[1])))
+            n_el = n_el.replace("DESCRIPTION", self.filter_out(str(al[2])))
+            data = data.replace("<!--ELENENT-->", n_el)
         return data
 
     def reqto_form_title_inputor(self, data, request):
         request = unquote_plus(request)
-        return data.replace("REQUEST", request)
+        return data.replace("REQUEST", self.filter_out(request))
+
+    def filter_out(self, out_data):
+        html_dick = {
+            "<": "&lt;",
+            ">": "&gt;",
+            "&": "&amp;",
+            "‘": "&lsquo;",
+            "’": "&rsquo;",
+            '“': "&ldquo;",
+            '”': "&rdquo;",
+        }
+        for k, v in html_dick.items():
+            out_data = out_data.replace(k, v)
+        return out_data
 
     def table_creator(self, time_dick, global_start_time):
         table = '''
