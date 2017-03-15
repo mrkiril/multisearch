@@ -432,11 +432,12 @@ class ResultsMerger:
         html_dick = {
             "<": "&lt;",
             ">": "&gt;",
-            "&": "&amp;",
             "‘": "&lsquo;",
             "’": "&rsquo;",
             '“': "&ldquo;",
             '”': "&rdquo;",
+            "'": "&apos;",
+            '"': "&quot;"
         }
         for k, v in html_dick.items():
             out_data = out_data.replace(k, v)
